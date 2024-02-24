@@ -311,7 +311,9 @@ function countPlaceholdersInText(text) {
 }
 
 //Calculate the PDF Hash
-function calculatePDFHash(filePath, algorithm = 'sha256') {
+
+
+function calculatePDFHash(filePath, salt, algorithm = 'sha256') {
     const hash = crypto.createHash(algorithm);
     const fileStream = fs.createReadStream(filePath);
 
@@ -321,6 +323,9 @@ function calculatePDFHash(filePath, algorithm = 'sha256') {
         });
 
         fileStream.on('end', () => {
+            // Adding salt to the hash
+            hash.update(salt);
+            
             const fileHash = hash.digest('hex');
             resolve(fileHash);
         });
@@ -330,6 +335,10 @@ function calculatePDFHash(filePath, algorithm = 'sha256') {
         });
     });
 }
+
+// // Example usage:
+// const filePath = 'path/to/your/file.pdf';
+const salt = process.env.SALT
 
 //Serializing Data
 function serializeWithDelimiter(array, delimiter) {
@@ -388,7 +397,7 @@ async function mergeAndSendEmail(file_path,data_instance,template_name) {
             };
             const sendMail = util.promisify(transporter.sendMail).bind(transporter);
             const info = await sendMail(mailOptions);
-            const hash = await calculatePDFHash('../backend/file_buffer/'+uniqueFileName)
+            const hash = await calculatePDFHash('../backend/file_buffer/'+uniqueFileName,salt)
             const saved = await SaveUserData(data_instance,template_name);
             console.log(data_instance.length)
             if(data_instance.length === 3){
