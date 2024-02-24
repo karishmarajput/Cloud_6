@@ -11,7 +11,7 @@ const Footer = () => {
       <Container>
         <Row>
           <Col md={6} className="text-center text-md-left">
-            <p className="mb-0">&copy; 2023 Verifier. All rights reserved.</p>
+            <p className="mb-0">&copy; 2024 Verifier. All rights reserved.</p>
           </Col>
           <Col md={6} className="text-center text-md-right">
             <p className="mb-0">

@@ -59,10 +59,16 @@ body {
 
 .btn {
   width: 200px;
-  z-index: 1;
-  font-size: 1.3rem;
+  
+  
 }
-
+.mainBtn{
+  color: white;
+  position: relative;
+  z-index: 1;
+  font-weight: 600;
+  font-size: 1.5rem;
+}
 .circles {
   position: absolute;
   top: 0;
