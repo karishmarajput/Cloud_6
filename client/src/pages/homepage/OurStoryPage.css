@@ -1,0 +1,20 @@
+.our-story-page {
+  background-color: #fff;
+  color: #4e54c8;
+  padding: 50px 0px;
+  min-height: 90vh;
+}
+
+.elongated-rectangle {
+  width: 450px;
+  height: 400px;
+  border-radius: 20px;
+  margin: 0 auto;
+}
+
+@media screen and (max-width: 768px) {
+  .our-story-page {
+    height: auto;
+  }
+}
+

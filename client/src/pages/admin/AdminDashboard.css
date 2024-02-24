@@ -1,0 +1,58 @@
+.dashboard {
+  height: 100vh;
+}
+.admin-dash {
+  padding: 50px 100px;
+}
+
+.counter-div {
+  padding: 20px;
+}
+
+.count-head {
+  text-align: center;
+  font-size: 7rem;
+  font-weight: bold;
+  color: #4e54c8;
+}
+
+.count-sub {
+  font-weight: bold;
+  text-align: center;
+  font-size: 1.5rem;
+  color: #4e54c8;
+}
+
+.admin-btn {
+  margin-top: 30px;
+  width: 20rem;
+  border-radius: 1rem;
+  font-size: 1.2rem;
+}
+
+.verify-table {
+  margin-left: 100px;
+  margin-right: 100px;
+}
+
+.verify-btn {
+  border-radius: 2rem;
+  width: 5rem;
+}
+
+@media screen and (max-width: 1024px) {
+  .dashboard {
+    height: auto;
+  }
+  .admin-dash {
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+  }
+  .admin-btn {
+    width: 15rem;
+  }
+  .verify-table {
+    margin: auto;
+  }
+}

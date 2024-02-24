@@ -1,0 +1,23 @@
+.working-page {
+  background-color: #4e54c8;
+  padding: 50px 0;
+}
+
+.working-page h2 {
+  color: #f1f4f7;
+}
+
+.working-image-container {
+  text-align: center;
+}
+
+.working-image {
+  width: 100%;
+  max-width: 600px; /* Set a maximum width if needed */
+  border-radius: 10px;
+}
+
+.working-text {
+  margin-top: 15px;
+  color: #f1f4f7;
+}

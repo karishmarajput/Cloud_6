@@ -1,0 +1,88 @@
+.navLoginAdmin{
+  background-color: #4e54c8;
+}
+
+.login-container {
+  width: 100%;
+}
+
+.flex-container-login {
+  display: flex;
+  flex-direction: row;
+}
+
+.image-section-login,
+.form-section-login {
+  flex: 1;
+  padding: 20px;
+  overflow: hidden;
+}
+
+.image-section-login img {
+  max-width: 100%;
+  max-height: 100%;
+  height: auto;
+  display: flex;
+  margin: 0 auto;
+}
+
+.form-section-login {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  max-width: 100%;
+  font-size: 18px;
+}
+
+.login-form {
+  width: 100%;
+  max-width: 300px;
+}
+
+.form-group-login {
+  margin-bottom: 15px;
+}
+
+.form-group-login-button {
+  margin-bottom: 15px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+label {
+  display: flex;
+  margin-bottom: 5px;
+  text-align: left;
+}
+
+input {
+  width: 100%;
+  padding: 8px;
+  box-sizing: border-box;
+  margin-bottom: 10px;
+}
+
+button {
+  padding: 10px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}
+
+@media screen and (max-width: 768px) {
+  .flex-container {
+    flex-direction: column;
+  }
+
+  .form-section {
+    max-width: none;
+  }
+}
+
+button:hover {
+  background-color: #0056b3;
+}

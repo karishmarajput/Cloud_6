@@ -1,0 +1,227 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans&display=swap');
+
+/* Login Page Styles */
+.navLogin{
+  background-color: #4e54c8;
+}
+
+.login-container {
+  min-height: 40rem;
+  min-width: 100vh;
+  overflow: hidden;
+}
+
+.flex-container-login {
+  display: flex;
+  flex-direction: row;
+  z-index: 2; /* Ensure that the form and image sections are above the bubbles */
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80%; /* Adjust the width as needed */
+  height: 80vh;
+}
+
+.image-section-login,
+.form-section-login {
+  flex: 1;
+  padding: 20px;
+  overflow: hidden;
+}
+
+.image-section-login img {
+  min-width: 20rem;
+  min-height: 30rem;
+  display: flex;
+  margin: 0 auto;
+}
+
+.form-section-login {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  max-width: 100%;
+  font-size: 18px;
+}
+
+.login-form {
+  width: 100%;
+  max-width: 300px;
+}
+
+.form-group-login {
+  margin-bottom: 15px;
+}
+
+.form-group-login-button {
+  margin-bottom: 15px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+label {
+  display: flex;
+  margin-bottom: 5px;
+  text-align: left;
+}
+
+input {
+  width: 100%;
+  padding: 8px;
+  box-sizing: border-box;
+  margin-bottom: 10px;
+}
+
+button {
+  padding: 10px;
+  background-color: #4e54c8;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+/* Bubble Animation Styles */
+
+.bubbleBody {
+  position: relative;
+  z-index: 1; /* Ensure that bubbles are behind other sections */
+  /* background-color: #161616; */
+  overflow: hidden;
+  font-family: 'Noto Sans', sans-serif;
+  min-height: 100vh;
+  width: 100vw;
+}
+
+.bubble {
+  animation: morph 15s linear infinite alternate, spin 20s linear infinite;
+  position: relative;
+}
+
+.bubble::before {
+  content: "";
+  opacity: 25%;
+  position: absolute;
+  z-index: -1;
+  background: linear-gradient(180deg, #4e54c8, #5b36ff);
+  /* background: #4e54c8; */
+  animation: morph 15s linear infinite alternate, spin 20s linear infinite;
+  will-change: border-radius, transform;
+}
+
+.bubble::after {
+  animation: morph 10s linear infinite alternate, spin 26s linear infinite reverse;
+}
+
+.bubble_one::before {
+  width: 50vmax;
+  height: 50vmax;
+  left: -20vmin;
+  top: -20vmin;
+  transform-origin: 55% 55%;
+}
+
+.bubble_one::after {
+  width: 50vmin;
+  height: 50vmin;
+  left: auto;
+  top: auto;
+  transform-origin: 20% 20%;
+}
+
+.bubble_two::before {
+  width: 35vmax;
+  height: 35vmax;
+  left: 100vmin;
+  top: 20vmin;
+  transform-origin: 60% 60%;
+}
+
+.bubble_two::after {
+  width: 35vmin;
+  height: 35vmin;
+  left: auto;
+  top: auto;
+  transform-origin: 65% 65%;
+}
+
+.bubble_three::before {
+  width: 80vmax;
+  height: 80vmax;
+  left: 20vmin;
+  top: 20vmin;
+  transform-origin: 20% 20%;
+}
+
+.bubble_three::after {
+  width: 80vmin;
+  height: 80vmin;
+  left: auto;
+  top: auto;
+  transform-origin: 25% 25%;
+}
+
+.bubble_four::before {
+  width: 60vmax;
+  height: 60vmax;
+  left: 100vmin;
+  top: 40vmin;
+  transform-origin: 40% 40%;
+}
+
+.bubble_four::after {
+  width: 60vmin;
+  height: 60vmin;
+  left: auto;
+  top: auto;
+  transform-origin: 45% 45%;
+}
+
+@keyframes morph {
+  0% {
+    border-radius: 40% 60% 60% 40% / 70% 30% 70% 30%;
+  }
+  100% {
+    border-radius: 40% 60%;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@media screen and (max-width: 830px) {
+  .flex-container-login {
+    flex-direction: column;
+    width: 100%; /* Adjust the width as needed */
+    max-height: none; /* Remove the max-height restriction */
+    height: auto; /* Allow the height to adjust based on content */
+  }
+  
+  .image-section-login{
+    display: none;
+  }
+  .form-section-login {
+    flex: 1; /* Adjust flex properties as needed */
+    padding: 20px;
+  }
+  
+  /* .image-section-login img {
+    min-width: 100%; /*Make the image fill the container 
+    min-height: auto;  Allow the height to adjust based on content *
+    display: block; /* Ensure the image doesn't overflow its container *
+    margin: 0 auto;
+  } */
+}
+
+
+

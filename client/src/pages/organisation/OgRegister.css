@@ -1,0 +1,232 @@
+.navLogin{
+  background-color: #4e54c8;
+}
+
+.flex-container-register {
+  display: flex;
+  flex-direction: row;
+  z-index: 2;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  min-height: 80vh;
+}
+
+.image-section{
+  flex: 1;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+  max-height: 100vh;
+}
+
+.image-section img {
+  width: 35%;
+  max-height: 100vh; /*Adjust the min-height to match the form-section */
+  display: flex;
+  margin: 0 auto;
+  animation: slideRight 1.5s ease-in-out forwards;
+}
+
+.register-container{
+  min-height: 100vh;
+  width: 100%;
+  overflow: hidden;
+
+}
+
+@keyframes slideRight {
+  from {
+    transform: translateX(-60%);
+  }
+  to {
+    transform: translateX(50%);
+  }
+}
+
+.form-section {
+  flex: 1;
+  padding: 20px;
+  position: absolute;
+  top: 10%;
+  left: -25%;
+  max-height: 100vh;
+  width: 100%;
+  box-sizing: border-box;
+  animation: popUp 1s ease forwards 1.5s;
+  opacity: 0;
+}
+
+@keyframes popUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.form-section h2 {
+  text-align: center;
+}
+
+.form-section form {
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.form-section label {
+  display: block;
+  margin-bottom: 10px;
+}
+
+.form-section input {
+  width: 100%;
+  padding: 8px;
+  box-sizing: border-box;
+  margin-bottom: 10px;
+}
+
+.form-section button {
+  width: 100%;
+  padding: 10px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  margin: 0px;
+  cursor: pointer;
+}
+
+
+
+/* Bubble Animation Styles */
+
+.bubbleBodyR {
+  position: relative;
+  z-index: 1; /* Ensure that bubbles are behind other sections */
+  /* background-color: #161616; */
+  overflow: hidden;
+  font-family: 'Noto Sans', sans-serif;
+  min-height: 100vh;
+  width: 100vw;
+}
+
+.bubbleR {
+  animation: morph 15s linear infinite alternate, spin 20s linear infinite;
+  position: relative;
+}
+
+.bubbleR::before {
+  content: "";
+  opacity: 25%;
+  position: absolute;
+  z-index: -1;
+  background: linear-gradient(180deg, #4e54c8, #5b36ff);
+  /* background: #4e54c8; */
+  animation: morph 15s linear infinite alternate, spin 20s linear infinite;
+  will-change: border-radius, transform;
+}
+
+.bubbleR::after {
+  animation: morph 10s linear infinite alternate, spin 26s linear infinite reverse;
+}
+
+.bubble_oneR::before {
+  width: 50vmax;
+  height: 50vmax;
+  left: -20vmin;
+  top: -20vmin;
+  transform-origin: 55% 55%;
+}
+
+.bubble_oneR::after {
+  width: 50vmin;
+  height: 50vmin;
+  left: auto;
+  top: auto;
+  transform-origin: 20% 20%;
+}
+
+.bubble_twoR::before {
+  width: 35vmax;
+  height: 35vmax;
+  left: 100vmin;
+  top: 20vmin;
+  transform-origin: 60% 60%;
+}
+
+.bubble_twoR::after {
+  width: 35vmin;
+  height: 35vmin;
+  left: auto;
+  top: auto;
+  transform-origin: 65% 65%;
+}
+
+.bubble_threeR::before {
+  width: 80vmax;
+  height: 80vmax;
+  left: 20vmin;
+  top: 20vmin;
+  transform-origin: 20% 20%;
+}
+
+.bubble_threeR::after {
+  width: 80vmin;
+  height: 80vmin;
+  left: auto;
+  top: auto;
+  transform-origin: 25% 25%;
+}
+
+.bubble_fourR::before {
+  width: 60vmax;
+  height: 60vmax;
+  left: 100vmin;
+  top: 40vmin;
+  transform-origin: 40% 40%;
+}
+
+.bubble_fourR::after {
+  width: 60vmin;
+  height: 60vmin;
+  left: auto;
+  top: auto;
+  transform-origin: 45% 45%;
+}
+
+@keyframes morph {
+  0% {
+    border-radius: 40% 60% 60% 40% / 70% 30% 70% 30%;
+  }
+  100% {
+    border-radius: 40% 60%;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@media screen and (max-width: 900px) {  
+  .image-section{
+    display: none;
+  }
+
+  .form-section {
+    position: static;
+    max-width: 100%;
+    margin: 0 auto;
+    left: 0;
+    top: 0;
+    padding: 20px;
+    animation: none;
+    opacity: 1;
+  
+}
+}

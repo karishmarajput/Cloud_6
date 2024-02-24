@@ -1,0 +1,44 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@adobe/pdfservices-node-sdk": "^3.4.2",
+    "adm-zip": "^0.5.10",
+    "bcrypt": "^5.1.1",
+    "body-parser": "^1.20.2",
+    "convertapi": "^1.13.0",
+    "crypto": "^1.0.1",
+    "csv-parser": "^3.0.0",
+    "docxyz": "^0.2.4",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "fs": "^0.0.1-security",
+    "html-to-image": "^1.11.11",
+    "ipfs-http-client": "^56.0.2",
+    "jsonwebtoken": "^9.0.2",
+    "libreoffice-convert": "^1.5.0",
+    "mammoth": "^1.6.0",
+    "mongoose": "^8.0.2",
+    "morgan": "^1.10.0",
+    "multer": "^1.4.5-lts.1",
+    "nodemailer": "^6.9.7",
+    "nodemon": "^3.0.2",
+    "pdf.js-extract": "^0.2.1",
+    "pdf2json": "^3.0.5",
+    "truffle-contract": "^4.0.31",
+    "unzipper": "^0.10.14",
+    "uuid": "^9.0.1",
+    "web3": "^4.3.0"
+  },
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.2.3",
+    "ethers": "^5.0.0"
+  }
+}
