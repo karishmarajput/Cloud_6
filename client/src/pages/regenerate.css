@@ -1,3 +1,42 @@
-.regenerateDiv{
-    min-height: 90vh;
+.cont {
+  display: flex;
+  align-items: center;
+}
+
+.regenerateDiv {
+  min-height: 90vh;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.image {
+  flex: 0 0 auto; /* This prevents the image from growing */
+  margin-right: 20px; /* Adjust spacing between image and content */
+}
+
+.regImg {
+  width: 500px;
+  height: 500px;
+}
+.RegForm {
+  width: 300px;
+  padding: 50px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.RegBtn {
+  background-color: #4e54c8;
+  width: 100%;
+  margin: 0;
+}
+
+@media (max-width: 1024px) {
+  .image {
+    display: none;
   }
+}

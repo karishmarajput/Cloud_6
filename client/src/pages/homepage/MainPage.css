@@ -59,15 +59,20 @@ body {
 
 .btn {
   width: 200px;
-  
-  
 }
-.mainBtn{
+
+.mainBtn {
+  background-color: #d8572a;
   color: white;
   position: relative;
   z-index: 1;
   font-weight: 600;
   font-size: 1.5rem;
+}
+
+.mainBtn:hover {
+  background-color: brown;
+  color: white;
 }
 .circles {
   position: absolute;
