@@ -25,7 +25,10 @@ function DragDropFile() {
 
     if (file.type === 'application/pdf') {
       formData.append('pdf', file);
-
+      for (const entry of formData.entries()) {
+        console.log(entry[0] + ':', entry[1]);
+      }
+      
       setLoading(true);
 
       fetch('http://localhost:8000/verify/uploadpdf', {

@@ -141,6 +141,7 @@ exports.getMyTemplates = async(req,res,next) => {
 }*/
 
 //Upload a template (Word)
+// const cloudinary = require("cloudinary").v2
 exports.uploadTemplate = async(req,res,next) => {
     try {
         const bool = req.body.publicBool;
@@ -156,6 +157,10 @@ exports.uploadTemplate = async(req,res,next) => {
                 convertapi.convert('jpg',{
                     File : "./templates/"+req.file.filename
                 },'doc').then(function(result){
+                    // cloudinary.v2.uploader
+                    // .upload(result, { 
+                    // use_filename: true})
+                    // .then(result=>console.log(result));
                     result.saveFiles("./image_files")
                 })
                 return res.status(200).json({message : "File Uploaded Successfully.",data : result})
@@ -368,12 +373,12 @@ async function mergeAndSendEmail(file_path,data_instance,template_name) {
             const transporter = nodemailer.createTransport({
                 service: 'outlook',
                 auth: {
-                    user: 'cloud6sih@outlook.com',
-                    pass: 'Cloud6Verifier'
+                    user: process.env.EMAIL,
+                    pass: process.env.PASSWORD
                 }
             });
             const mailOptions = {
-                from: 'cloud6sih@outlook.com',
+                from: process.env.EMAIL,
                 to: data_instance[1]["email"],
                 subject: 'Certificate',
                 attachments: [{

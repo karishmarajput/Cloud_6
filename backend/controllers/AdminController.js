@@ -92,13 +92,13 @@ async function sendVerificationEmail(organization) {
     const transporter = nodemailer.createTransport({
       service: 'outlook',
       auth: {
-        user: 'verifiertheoriginal@outlook.com',
-        pass: 'Verifier$321'
+        user: process.env.EMAIL,
+        pass: process.env.PASSWORD
       }
     });
   
     const mailOptions = {
-      from: 'verifiertheoriginal@outlook.com',
+      from: process.env.EMAIL,
       to: organization.email,
       subject: 'Organization Verification',
       text: 'Your organization has been successfully verified by Admin.'
@@ -212,12 +212,12 @@ exports.GetDetails = async(req,res) => {
         const transporter = nodemailer.createTransport({
             service: 'outlook',
             auth: {
-                user: 'cloud6sih@outlook.com',
-                pass: 'Cloud6Verifier'
+                user:  process.env.EMAIL,
+                pass: process.env.PASSWORD
             }
         });
         const mailOptions = {
-            from: 'cloud6sih@outlook.com',
+            from:  process.env.EMAIL,
             to: req.body.email,
             subject: 'Your certificate from Verifier',
             attachments: [{

@@ -35,7 +35,7 @@ const MainPage = () => {
               Verification and Generation.
             </p>
 
-            <a href="/verify" variant="primary" className="btn">
+            <a href="/verify" variant="primary" className="btn mainBtn">
               Verify
             </a>
           </Col>

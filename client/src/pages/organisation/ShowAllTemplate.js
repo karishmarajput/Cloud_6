@@ -60,6 +60,7 @@ function ShowAllTemplate() {
             <div className="navLogin">
                 <NavbarCertif textColor="#FFFFFF" />
             </div>
+            <div className="showAllTemp">
             <h1 className="p-5"><b>Templates</b></h1>
             <div className='templates pb-3'>
                 {templates &&
@@ -83,6 +84,7 @@ function ShowAllTemplate() {
                             />
                         </div>
                     ))}
+            </div>
             </div>
             <Footer />
         </div>

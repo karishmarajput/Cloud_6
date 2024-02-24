@@ -54,6 +54,7 @@ function findSeatNumber(data, searchString) {
     return null;
   }
 exports.UploadPDF = async(req,res) => {
+    console.log('hello')
     const base_path = '../backend/pdf_upload/' + req.file.filename
     //console.log(base_path)
     const hash = await calculatePDFHash(base_path)
@@ -62,11 +63,12 @@ exports.UploadPDF = async(req,res) => {
         if (err) return console.log(err);
         const searchString = 'Certificate ID';
         const seatNumber = findSeatNumber(data["pages"][0]["content"], searchString);
- 
+        console.log(seatNumber)
         if (seatNumber !== null) {
         //console.log(`Seat Number: ${seatNumber}`);
         const CurrentTime = getUnixTimestampForNextMonths().currentUnixTimestamp;
         const result = await GetDataFromBlockchain(seatNumber);
+        
         if (result[2] === hash){
             return res.status(200).json({message : "Verified"})
         }
