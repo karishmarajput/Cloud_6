@@ -25,25 +25,29 @@ function getUnixTimestampForNextMonths(numMonths) {
     const nextUnixTimestamp = Math.floor(nextDate.getTime() / 1000);
     return { currentUnixTimestamp, nextUnixTimestamp };
   }
-function calculatePDFHash(filePath, algorithm = 'sha256') {
+  function calculatePDFHash(filePath, salt, algorithm = 'sha256') {
     const hash = crypto.createHash(algorithm);
     const fileStream = fs.createReadStream(filePath);
- 
+
     return new Promise((resolve, reject) => {
         fileStream.on('data', (data) => {
             hash.update(data);
         });
- 
+
         fileStream.on('end', () => {
+            // Adding salt to the hash
+            hash.update(salt);
+            
             const fileHash = hash.digest('hex');
             resolve(fileHash);
         });
- 
+
         fileStream.on('error', (error) => {
             reject(error);
         });
     });
 }
+const salt = process.env.SALT
 function findSeatNumber(data, searchString) {
     for (const item of data) {
       if (item.str.includes(searchString)) {
@@ -57,8 +61,8 @@ exports.UploadPDF = async(req,res) => {
     console.log('hello')
     const base_path = '../backend/pdf_upload/' + req.file.filename
     //console.log(base_path)
-    const hash = await calculatePDFHash(base_path)
-    //console.log(hash)
+    const hash = await calculatePDFHash(base_path,salt)
+    console.log(hash)
     pdfExtract.extract('../backend/pdf_upload/' + req.file.filename,options,async(err,data) => {
         if (err) return console.log(err);
         const searchString = 'Certificate ID';
@@ -68,11 +72,12 @@ exports.UploadPDF = async(req,res) => {
         //console.log(`Seat Number: ${seatNumber}`);
         const CurrentTime = getUnixTimestampForNextMonths().currentUnixTimestamp;
         const result = await GetDataFromBlockchain(seatNumber);
-        
+        console.log(result[2])
         if (result[2] === hash){
             return res.status(200).json({message : "Verified"})
         }
         else{
+            console.log('not valid')
             return res.status(400).json({message : "Invalid"})
         }
         } else {
@@ -84,7 +89,7 @@ exports.UploadPDF = async(req,res) => {
 async function UploadPDFFunction(file_name) {
     const base_path = '../backend/pdf_upload/' + file_name;
 
-    const hash = await calculatePDFHash(base_path);
+    const hash = await calculatePDFHash(base_path,salt);
 
     return new Promise((resolve, reject) => {
         pdfExtract.extract(base_path, options, async (err, data) => {
