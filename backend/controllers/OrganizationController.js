@@ -336,8 +336,7 @@ function calculatePDFHash(filePath, salt, algorithm = 'sha256') {
     });
 }
 
-// // Example usage:
-// const filePath = 'path/to/your/file.pdf';
+
 const salt = process.env.SALT
 
 //Serializing Data
@@ -360,8 +359,65 @@ async function SaveUserData(data_instance,template_name){
         return res
     }
 }
-async function mergeAndSendEmail(file_path,data_instance,template_name) {
+// async function mergeAndSendEmail(file_path,data_instance,template_name) {
+//     try {
+//         const credentials = PDFServicesSdk.Credentials
+//             .servicePrincipalCredentialsBuilder()
+//             .withClientId("c69f66aa60dd4a718f84e509a8e5077a")
+//             .withClientSecret("p8e-Evegkfh66jnyj6FCqHB2S1VHgjcz8bB7")
+//             .build();
+//         const jsonDataForMerge = data_instance[0];
+//         const executionContext = PDFServicesSdk.ExecutionContext.create(credentials);
+//         const documentMerge = PDFServicesSdk.DocumentMerge;
+//         const documentMergeOptions = documentMerge.options;
+//         const options = new documentMergeOptions.DocumentMergeOptions(jsonDataForMerge, documentMergeOptions.OutputFormat.PDF);
+//         const documentMergeOperation = documentMerge.Operation.createNew(options);
+//         const input = PDFServicesSdk.FileRef.createFromLocalFile(file_path);
+//         documentMergeOperation.setInput(input);
+//         const result = await documentMergeOperation.execute(executionContext);
+//         const uniqueFileName = `Certificate_${uuidv4()}.pdf`;
+//         await result.saveAsFile('../backend/file_buffer/'+uniqueFileName)
+//         .then(async(result) => {
+//             const transporter = nodemailer.createTransport({
+//                 service: 'outlook',
+//                 auth: {
+//                     user: process.env.EMAIL,
+//                     pass: process.env.PASSWORD
+//                 }
+//             });
+//             const mailOptions = {
+//                 from: process.env.EMAIL,
+//                 to: data_instance[1]["email"],
+//                 subject: 'Certificate',
+//                 attachments: [{
+//                     filename: '../backend/file_buffer/'+uniqueFileName,
+//                     path: '../backend/file_buffer/'+uniqueFileName
+//                 }],
+//             };
+//             const sendMail = util.promisify(transporter.sendMail).bind(transporter);
+//             const info = await sendMail(mailOptions);
+//             const hash = await calculatePDFHash('../backend/file_buffer/'+uniqueFileName,salt)
+//             const saved = await SaveUserData(data_instance,template_name);
+//             console.log(data_instance.length)
+//             if(data_instance.length === 3){
+            
+//                 const res = await addDataToBlockChainWithExpiry(data_instance[0]["id"],hash,getUnixTimestampForNextMonths(data_instance[2]["expiry"]).nextUnixTimestamp)
+//                 console.log(res)
+//             }
+//             else{
+//                 const res = await addDataToBlockChainWithoutExpiry(data_instance[0]["id"],hash);
+//                 console.log(res)
+//             }
+            
+//             fs.unlinkSync('../backend/file_buffer/'+uniqueFileName);
+//         })
+//     } catch (err) {
+//         console.log('Exception encountered while executing operation', err);
+//     }
+// }
+async function mergeAndSendEmail(file_path,data_instance,template_name,email) {
     try {
+        console.log("here")
         const credentials = PDFServicesSdk.Credentials
             .servicePrincipalCredentialsBuilder()
             .withClientId("c69f66aa60dd4a718f84e509a8e5077a")
@@ -377,37 +433,32 @@ async function mergeAndSendEmail(file_path,data_instance,template_name) {
         documentMergeOperation.setInput(input);
         const result = await documentMergeOperation.execute(executionContext);
         const uniqueFileName = `Certificate_${uuidv4()}.pdf`;
-        await result.saveAsFile('../backend/file_buffer/'+uniqueFileName)
+        await result.saveAsFile('../file_buffer/'+uniqueFileName)
         .then(async(result) => {
             const transporter = nodemailer.createTransport({
                 service: 'outlook',
-                auth: {
-                    user: process.env.EMAIL,
-                    pass: process.env.PASSWORD
-                }
+                auth: email
             });
             const mailOptions = {
-                from: process.env.EMAIL,
+                from: email.user,
                 to: data_instance[1]["email"],
                 subject: 'Certificate',
                 attachments: [{
-                    filename: '../backend/file_buffer/'+uniqueFileName,
-                    path: '../backend/file_buffer/'+uniqueFileName
+                    filename: '../file_buffer/'+uniqueFileName,
+                    path: '../file_buffer/'+uniqueFileName
                 }],
             };
             const sendMail = util.promisify(transporter.sendMail).bind(transporter);
             const info = await sendMail(mailOptions);
-            const hash = await calculatePDFHash('../backend/file_buffer/'+uniqueFileName,salt)
+            const hash = await calculatePDFHash('../file_buffer/'+uniqueFileName,salt)
             const saved = await SaveUserData(data_instance,template_name);
             console.log(data_instance.length)
             if(data_instance.length === 3){
-                console.log('hi')
                 const res = await addDataToBlockChainWithExpiry(data_instance[0]["id"],hash,getUnixTimestampForNextMonths(data_instance[2]["expiry"]).nextUnixTimestamp)
-                console.log(res)
             }
             else{
                 const res = await addDataToBlockChainWithoutExpiry(data_instance[0]["id"],hash);
-                console.log(res)
+                
             }
             
             fs.unlinkSync('../backend/file_buffer/'+uniqueFileName);
@@ -446,27 +497,91 @@ function compareArraysIgnoringEmail(placeholderArray, attributeArray) {
 }
 
 
+// exports.uploadCSVandSelectTemplate = async(req,res,next) => {
+//     const template = req.body.template_id;
+//     console.log(template)
+//     text = await extractTextFromDocx("../backend/templates/" + template)
+//     console.log(text)
+//     let placeholders = countPlaceholdersInText(text);
+//     console.log(placeholders)
+//     let column_names = await getAttributesFromCSV("../backend/csv_data/" + req.file.filename)
+//     console.log(column_names)
+//     if(compareArraysIgnoringEmail(placeholders,column_names) === false){
+//         console.log('no')
+//         fs.unlinkSync("../backend/csv_data/" + req.file.filename)
+//         return res.status(400).json({message : "Placeholders and csv attributes do not match"})
+//     }
+//     console.log('yes')
+//     ans = await parseCSVtoJSON("../backend/csv_data/" + req.file.filename,placeholders);
+//     console.log(ans)
+//     for(var i = 0 ;i < ans.length;i++){
+//         await mergeAndSendEmail("../backend/templates/" + template,ans[i],template)
+//     }
+//     return res.status(200).json({message : "done"})
+    
+// }
+let emailAccounts = [
+    {user : "Cloud62024@outlook.com",pass : "Cloud@66"},
+    {user : "aaryan22441@outlook.com",pass : "aaryan@22441"},
+    {user : "Vinayak122333@outlook.com",pass : "vinayak@122333"},
+    {user : "karishma1232024@outlook.com",pass : "karishma@1232024"}
+]
+function distributeRowsAmongEmails(rows, emailAccounts) {
+    let rowsPerEmail = {};
+    rows.forEach((row, index) => {
+        const emailIndex = index % emailAccounts.length;
+        const email = emailAccounts[emailIndex];
+        if (!rowsPerEmail[email]) {
+            rowsPerEmail[JSON.stringify(email)] = [];
+        }
+        rowsPerEmail[JSON.stringify(email)].push(row);
+    });
+    return rowsPerEmail;
+}
+
+async function processRowsWithParallelEmails(rows, emailAccounts,file_path,template_name) {
+    try {
+        const rowsPerEmail = distributeRowsAmongEmails(rows, emailAccounts);
+        console.log(rowsPerEmail)
+        await Promise.all(emailAccounts.map((email, index) => {
+            const emailRows = rowsPerEmail[JSON.stringify(email)] || [];
+            console.log(emailRows)
+            return processRowsForEmail(email, emailRows,file_path,template_name);
+        }));
+
+        console.log('All rows processed successfully.');
+    } catch (err) {
+        console.error('Error processing rows:', err);
+    }
+}
+
+async function processRowsForEmail(email, rows,file_path,template_name) {
+    try {
+        //console.log(email, rows,file_path,template_name)
+        await Promise.all(rows.map(row => mergeAndSendEmail(file_path,row,template_name, email)));
+        console.log(`Rows processed successfully for ${email}`);
+    } catch (err) {
+        console.error(`Error processing rows for ${email}:`, err);
+    }
+}
+
+
 exports.uploadCSVandSelectTemplate = async(req,res,next) => {
     const template = req.body.template_id;
-    console.log(template)
     text = await extractTextFromDocx("../backend/templates/" + template)
-    console.log(text)
     let placeholders = countPlaceholdersInText(text);
-    console.log(placeholders)
     let column_names = await getAttributesFromCSV("../backend/csv_data/" + req.file.filename)
-    console.log(column_names)
     if(compareArraysIgnoringEmail(placeholders,column_names) === false){
-        console.log('no')
         fs.unlinkSync("../backend/csv_data/" + req.file.filename)
         return res.status(400).json({message : "Placeholders and csv attributes do not match"})
     }
-    console.log('yes')
     ans = await parseCSVtoJSON("../backend/csv_data/" + req.file.filename,placeholders);
-    console.log(ans)
+    /*let drae = distributeRowsAmongEmails(ans,emailAccounts);
+    console.log(drae)
     for(var i = 0 ;i < ans.length;i++){
         await mergeAndSendEmail("../backend/templates/" + template,ans[i],template)
-    }
+    }*/
+    processRowsWithParallelEmails(ans,emailAccounts,"../backend/templates/" + template,template)
     return res.status(200).json({message : "done"})
     
-}
-            
+}      
