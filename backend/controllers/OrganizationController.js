@@ -111,8 +111,8 @@ exports.getMyTemplates = async(req,res,next) => {
         }
         const templates = org.templates;
         const templates_mapped = templates.map(obj => {
-            const { _id, name } = obj;
-            return { _id, name };
+            const { _id, name,publicBool } = obj;
+            return { _id, name,publicBool };
         });
         return res.status(200).json({data : templates_mapped})
     } catch (error) {
@@ -147,6 +147,7 @@ exports.uploadTemplate = async(req,res,next) => {
         const bool = req.body.publicBool;
         const org = await Organization.findById(req.userData.org.id);
         org.templates.push({name : req.file.filename,publicBool : bool})
+        console.log(org.templates)
         await org.save().then((result,err)=>{
             if(err){
                 
@@ -157,10 +158,6 @@ exports.uploadTemplate = async(req,res,next) => {
                 convertapi.convert('jpg',{
                     File : "./templates/"+req.file.filename
                 },'doc').then(function(result){
-                    // cloudinary.v2.uploader
-                    // .upload(result, { 
-                    // use_filename: true})
-                    // .then(result=>console.log(result));
                     result.saveFiles("./image_files")
                 })
                 return res.status(200).json({message : "File Uploaded Successfully.",data : result})
@@ -359,62 +356,7 @@ async function SaveUserData(data_instance,template_name){
         return res
     }
 }
-// async function mergeAndSendEmail(file_path,data_instance,template_name) {
-//     try {
-//         const credentials = PDFServicesSdk.Credentials
-//             .servicePrincipalCredentialsBuilder()
-//             .withClientId("c69f66aa60dd4a718f84e509a8e5077a")
-//             .withClientSecret("p8e-Evegkfh66jnyj6FCqHB2S1VHgjcz8bB7")
-//             .build();
-//         const jsonDataForMerge = data_instance[0];
-//         const executionContext = PDFServicesSdk.ExecutionContext.create(credentials);
-//         const documentMerge = PDFServicesSdk.DocumentMerge;
-//         const documentMergeOptions = documentMerge.options;
-//         const options = new documentMergeOptions.DocumentMergeOptions(jsonDataForMerge, documentMergeOptions.OutputFormat.PDF);
-//         const documentMergeOperation = documentMerge.Operation.createNew(options);
-//         const input = PDFServicesSdk.FileRef.createFromLocalFile(file_path);
-//         documentMergeOperation.setInput(input);
-//         const result = await documentMergeOperation.execute(executionContext);
-//         const uniqueFileName = `Certificate_${uuidv4()}.pdf`;
-//         await result.saveAsFile('../backend/file_buffer/'+uniqueFileName)
-//         .then(async(result) => {
-//             const transporter = nodemailer.createTransport({
-//                 service: 'outlook',
-//                 auth: {
-//                     user: process.env.EMAIL,
-//                     pass: process.env.PASSWORD
-//                 }
-//             });
-//             const mailOptions = {
-//                 from: process.env.EMAIL,
-//                 to: data_instance[1]["email"],
-//                 subject: 'Certificate',
-//                 attachments: [{
-//                     filename: '../backend/file_buffer/'+uniqueFileName,
-//                     path: '../backend/file_buffer/'+uniqueFileName
-//                 }],
-//             };
-//             const sendMail = util.promisify(transporter.sendMail).bind(transporter);
-//             const info = await sendMail(mailOptions);
-//             const hash = await calculatePDFHash('../backend/file_buffer/'+uniqueFileName,salt)
-//             const saved = await SaveUserData(data_instance,template_name);
-//             console.log(data_instance.length)
-//             if(data_instance.length === 3){
-            
-//                 const res = await addDataToBlockChainWithExpiry(data_instance[0]["id"],hash,getUnixTimestampForNextMonths(data_instance[2]["expiry"]).nextUnixTimestamp)
-//                 console.log(res)
-//             }
-//             else{
-//                 const res = await addDataToBlockChainWithoutExpiry(data_instance[0]["id"],hash);
-//                 console.log(res)
-//             }
-            
-//             fs.unlinkSync('../backend/file_buffer/'+uniqueFileName);
-//         })
-//     } catch (err) {
-//         console.log('Exception encountered while executing operation', err);
-//     }
-// }
+
 async function mergeAndSendEmail(file_path,data_instance,template_name,email) {
     try {
         console.log("here")
@@ -497,29 +439,6 @@ function compareArraysIgnoringEmail(placeholderArray, attributeArray) {
 }
 
 
-// exports.uploadCSVandSelectTemplate = async(req,res,next) => {
-//     const template = req.body.template_id;
-//     console.log(template)
-//     text = await extractTextFromDocx("../backend/templates/" + template)
-//     console.log(text)
-//     let placeholders = countPlaceholdersInText(text);
-//     console.log(placeholders)
-//     let column_names = await getAttributesFromCSV("../backend/csv_data/" + req.file.filename)
-//     console.log(column_names)
-//     if(compareArraysIgnoringEmail(placeholders,column_names) === false){
-//         console.log('no')
-//         fs.unlinkSync("../backend/csv_data/" + req.file.filename)
-//         return res.status(400).json({message : "Placeholders and csv attributes do not match"})
-//     }
-//     console.log('yes')
-//     ans = await parseCSVtoJSON("../backend/csv_data/" + req.file.filename,placeholders);
-//     console.log(ans)
-//     for(var i = 0 ;i < ans.length;i++){
-//         await mergeAndSendEmail("../backend/templates/" + template,ans[i],template)
-//     }
-//     return res.status(200).json({message : "done"})
-    
-// }
 let emailAccounts = [
     {user : "Cloud62024@outlook.com",pass : "Cloud@66"},
     {user : "aaryan22441@outlook.com",pass : "aaryan@22441"},
@@ -569,8 +488,11 @@ async function processRowsForEmail(email, rows,file_path,template_name) {
 exports.uploadCSVandSelectTemplate = async(req,res,next) => {
     const template = req.body.template_id;
     text = await extractTextFromDocx("../backend/templates/" + template)
+    console.log(text)
     let placeholders = countPlaceholdersInText(text);
+    console.log(placeholders)
     let column_names = await getAttributesFromCSV("../backend/csv_data/" + req.file.filename)
+    console.log(column_names)
     if(compareArraysIgnoringEmail(placeholders,column_names) === false){
         fs.unlinkSync("../backend/csv_data/" + req.file.filename)
         return res.status(400).json({message : "Placeholders and csv attributes do not match"})

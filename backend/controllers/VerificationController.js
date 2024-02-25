@@ -51,7 +51,9 @@ const salt = process.env.SALT
 function findSeatNumber(data, searchString) {
     for (const item of data) {
       if (item.str.includes(searchString)) {
+       
         const seatNumber = item.str.split(':')[1].trim();
+     
         return seatNumber;
       }
     }
@@ -67,12 +69,12 @@ exports.UploadPDF = async(req,res) => {
         if (err) return console.log(err);
         const searchString = 'Certificate ID';
         const seatNumber = findSeatNumber(data["pages"][0]["content"], searchString);
-        console.log(seatNumber)
         if (seatNumber !== null) {
         //console.log(`Seat Number: ${seatNumber}`);
         const CurrentTime = getUnixTimestampForNextMonths().currentUnixTimestamp;
         const result = await GetDataFromBlockchain(seatNumber);
         console.log(result[2])
+        console.log(hash)
         if (result[2] === hash){
             return res.status(200).json({message : "Verified"})
         }

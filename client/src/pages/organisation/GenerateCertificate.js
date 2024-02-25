@@ -35,6 +35,7 @@ function GenerateCertificate() {
 
       if (response.ok) {
         const { data } = await response.json();
+        console.log(data)
         setTemplates(data);
       } else {
         throw new Error('Failed to fetch templates');
@@ -225,23 +226,28 @@ function GenerateCertificate() {
           <div>
             <button className="generationBtn" onClick={openModal}>+</button>
           </div>
+         
           {templates.map((template, index) => (
-            <div
-              key={index}
-              style={{
-                backgroundColor: selectedTemplate === template ? 'lightblue' : 'white',
-              }}
-              onClick={() => handleTemplateSelect(template)}
-            >
-              <img
-                src={`http://localhost:8000/image_files/${template.name}`}
-                alt={template.name}
-                style={{ width: '300px', height: '200px', boxShadow: '5px 3px 3px #aaaaaa', border: '0.5px solid #aaaaaa' }}
-              />
-            </div>
-          ))}
+          <div
+            key={index}
+            style={{
+              backgroundColor: selectedTemplate === template ? 'lightblue' : 'white',
+              
+            }}
+            onClick={() => handleTemplateSelect(template)}
+          >
+            <img
+              src={`http://localhost:8000/image_files/${template.name}`}
+              alt={template.name}
+              style={{ width: '300px', height: '200px', boxShadow: '5px 3px 3px #aaaaaa', border: template.publicBool === true ? '.15rem solid green' : '.15rem solid #4E54C8'}}
+            />
+            
+          </div>
+        ))}
+
         </div>
         <h3>Upload participants list CSV file</h3>
+        <p>Please submit a CSV file containing candidate details, like their names dependng on template with email addresses, and optional expiry durations for certificates (in seconds).</p>
         <input 
           type="file" 
           onChange={handleCsvChange} 
