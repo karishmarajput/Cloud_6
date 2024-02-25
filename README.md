@@ -26,3 +26,44 @@ Technologies used in the project:
 <h2>Supporting Message:</h2>
 
 Empowering organizations with a secure and efficient platform our Certificate Management System ensures seamless certificate issuance and verification leveraging blockchain technology for tamper-proof integrity.
+
+## Features
+
+
+## Installation
+
+### Prerequisites
+
+- Node.js and npm installed on your machine
+- Internet connection
+
+### Steps
+
+1. **Clone the repository:**
+   ```sh
+   git clone https://github.com/karishmarajput/Cloud_6.git
+2. **Setup env file:**
+   ```sh
+   MONGODB_URL=       # MongoDB connection URL
+   JWT_KEY=           # Secret key for JWT token
+   API_URL=           # API URL for backend server
+   PRIVATE_KEY=       # Private key for Ethereum wallet
+   CONTRACT_ADDRESS=  # Address of deployed smart contract
+   CLOUDINARY_URL=    # Cloudinary URL for image storage
+   EMAIL=             # Email address for sending certificates
+   PASSWORD=          # Password for email account
+   SALT=              # Salt for hashing passwords
+   ```
+3. **Setup Server:**
+   ```sh
+   cd backend
+   npm install
+   nodemon server.js
+   ```
+4. **Setup Client:**
+   ```sh
+   cd client
+   npm install
+   npm start
+   ```
+   
