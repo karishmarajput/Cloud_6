@@ -57,7 +57,7 @@ exports.signup = async (req, res, next) => {
     await org.save().then((saved, err) => {
       if (saved) {
         return res.status(200).json({
-          message: "Organization Created. Wait for admin verification",
+          message: "Organization Created. Wait for Admin verification",
         });
       }
       if (err) {
@@ -325,12 +325,15 @@ function countPlaceholdersInText(text) {
 }
 
 //Calculate the PDF Hash
-
-function calculatePDFHash(filePath, salt, algorithm = "sha256") {
-  const hash = crypto.createHash(algorithm);
-  const fileStream = fs.createReadStream(filePath);
-
+async function calculatePDFHash(filePath, salt) {
   return new Promise((resolve, reject) => {
+    const hash = crypto.createHash("sha256");
+    const fileStream = fs.createReadStream(filePath);
+
+    fileStream.on("error", (error) => {
+      reject(error);
+    });
+
     fileStream.on("data", (data) => {
       hash.update(data);
     });
@@ -341,10 +344,6 @@ function calculatePDFHash(filePath, salt, algorithm = "sha256") {
 
       const fileHash = hash.digest("hex");
       resolve(fileHash);
-    });
-
-    fileStream.on("error", (error) => {
-      reject(error);
     });
   });
 }
@@ -358,6 +357,7 @@ function serializeWithDelimiter(array, delimiter) {
 
 //Utility for saving the serialized data corresponding to the user
 async function SaveUserData(data_instance, template_name) {
+  console.log(`Data instance ${data_instance}`);
   const UserAvailable = await User.findOne({
     email: data_instance[1]["email"],
   });
@@ -387,15 +387,19 @@ async function mergeAndSendEmail(
   email
 ) {
   try {
-    console.log("here");
+    console.log("Sending email message....");
     const credentials =
       PDFServicesSdk.Credentials.servicePrincipalCredentialsBuilder()
-        .withClientId("c69f66aa60dd4a718f84e509a8e5077a")
-        .withClientSecret("p8e-Evegkfh66jnyj6FCqHB2S1VHgjcz8bB7")
+        .withClientId(process.env.ADB_CLIENT)
+        .withClientSecret(process.env.ADB_SECRET)
         .build();
-    const jsonDataForMerge = data_instance[0];
+
     const executionContext =
       PDFServicesSdk.ExecutionContext.create(credentials);
+
+    const jsonDataForMerge = data_instance[0];
+    const uniqueFileName = `Certificate_${uuidv4()}.pdf`;
+
     const documentMerge = PDFServicesSdk.DocumentMerge;
     const documentMergeOptions = documentMerge.options;
     const options = new documentMergeOptions.DocumentMergeOptions(
@@ -405,33 +409,36 @@ async function mergeAndSendEmail(
     const documentMergeOperation = documentMerge.Operation.createNew(options);
     const input = PDFServicesSdk.FileRef.createFromLocalFile(file_path);
     documentMergeOperation.setInput(input);
-    const result = await documentMergeOperation.execute(executionContext);
-    const uniqueFileName = `Certificate_${uuidv4()}.pdf`;
-    await result
-      .saveAsFile("../file_buffer/" + uniqueFileName)
+    const result = await documentMergeOperation
+      .execute(executionContext)
+      .then((result) => result.saveAsFile("./file_buffer/" + uniqueFileName))
       .then(async (result) => {
         const transporter = nodemailer.createTransport({
-          service: "outlook",
+          service: "gmail",
           auth: email,
         });
+
         const mailOptions = {
           from: email.user,
           to: data_instance[1]["email"],
           subject: "Certificate",
           attachments: [
             {
-              filename: "../file_buffer/" + uniqueFileName,
-              path: "../file_buffer/" + uniqueFileName,
+              filename: "./file_buffer/" + uniqueFileName,
+              path: "./file_buffer/" + uniqueFileName,
             },
           ],
         };
+
         const sendMail = util.promisify(transporter.sendMail).bind(transporter);
         const info = await sendMail(mailOptions);
         const hash = await calculatePDFHash(
-          "../file_buffer/" + uniqueFileName,
+          "./file_buffer/" + uniqueFileName,
           salt
         );
+
         const saved = await SaveUserData(data_instance, template_name);
+
         console.log(data_instance.length);
         if (data_instance.length === 3) {
           const res = await addDataToBlockChainWithExpiry(
@@ -447,12 +454,29 @@ async function mergeAndSendEmail(
           );
         }
 
-        fs.unlinkSync("../backend/file_buffer/" + uniqueFileName);
+        fs.unlinkSync("./file_buffer/" + uniqueFileName);
+      })
+      .catch((err) => {
+        if (
+          err instanceof PDFServicesSdk.Error.ServiceApiError ||
+          err instanceof PDFServicesSdk.Error.ServiceUsageError
+        ) {
+          console.log(
+            "Exception encountered while executing merging operation",
+            err
+          );
+        } else {
+          console.log(
+            "Exception encountered while executing merging operation",
+            err
+          );
+        }
       });
   } catch (err) {
-    console.log("Exception encountered while executing operation", err);
+    console.log("Exception encountered while sending email", err);
   }
 }
+
 function getAttributesFromCSV(filePath) {
   let attributes = [];
 
@@ -517,12 +541,26 @@ async function processRowsWithParallelEmails(
 ) {
   try {
     const rowsPerEmail = distributeRowsAmongEmails(rows, emailAccounts);
+    console.log("Rows per email:");
     console.log(rowsPerEmail);
     await Promise.all(
       emailAccounts.map((email, index) => {
         const emailRows = rowsPerEmail[JSON.stringify(email)] || [];
+        console.log("Email rows:");
         console.log(emailRows);
-        return processRowsForEmail(email, emailRows, file_path, template_name);
+        // return processRowsForEmail(email, emailRows, file_path, template_name);
+        if (emailRows.length > 0) {
+          return processRowsForEmail(
+            email,
+            emailRows,
+            file_path,
+            template_name
+          );
+        } else {
+          console.log(
+            `Skipping processing for email ${email} as rows array is empty.`
+          );
+        }
       })
     );
 
@@ -546,34 +584,31 @@ async function processRowsForEmail(email, rows, file_path, template_name) {
 
 exports.uploadCSVandSelectTemplate = async (req, res, next) => {
   const template = req.body.template_id;
-  text = await extractTextFromDocx("../backend/templates/" + template);
-  console.log(text);
-  let placeholders = countPlaceholdersInText(text);
-  console.log(placeholders);
+  text = await extractTextFromDocx("./templates/" + template);
+  console.log(`Extracted text from Docx: ${text}`);
+
+  let placeholders = await countPlaceholdersInText(text);
+  console.log(`Placeholders: ${placeholders}`);
+
   let column_names = await getAttributesFromCSV(
-    "../backend/csv_data/" + req.file.filename
+    "./csv_data/" + req.file.filename
   );
-  console.log(column_names);
+  console.log(`Column names: ${column_names}`);
+
   if (compareArraysIgnoringEmail(placeholders, column_names) === false) {
-    fs.unlinkSync("../backend/csv_data/" + req.file.filename);
+    fs.unlinkSync("./csv_data/" + req.file.filename);
     return res
       .status(400)
       .json({ message: "Placeholders and csv attributes do not match" });
   }
-  ans = await parseCSVtoJSON(
-    "../backend/csv_data/" + req.file.filename,
-    placeholders
-  );
-  /*let drae = distributeRowsAmongEmails(ans,emailAccounts);
-    console.log(drae)
-    for(var i = 0 ;i < ans.length;i++){
-        await mergeAndSendEmail("../backend/templates/" + template,ans[i],template)
-    }*/
+  ans = await parseCSVtoJSON("./csv_data/" + req.file.filename, placeholders);
+
   processRowsWithParallelEmails(
     ans,
     emailAccounts,
-    "../backend/templates/" + template,
+    "./templates/" + template,
     template
   );
+
   return res.status(200).json({ message: "done" });
 };

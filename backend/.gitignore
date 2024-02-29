@@ -25,10 +25,10 @@ yarn-debug.log*
 yarn-error.log*
 
 # assets
-image_files/
-csv_data/
-templates/
-zip_upload/
-zipped_files/
-file_buffer/
-backend/
+/image_files
+/csv_data
+/templates
+/zip_upload
+/zipped_files
+/file_buffer
+/backend
