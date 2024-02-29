@@ -7,7 +7,7 @@ const nodemailer = require("nodemailer");
 const util = require("util");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
-
+const path = require("path");
 const Admin = require("../models/AdminModel");
 const Organization = require("../models/OrganizationModel");
 const User = require("../models/UserData");
@@ -38,6 +38,7 @@ exports.signup = async (req, res, next) => {
     res.status(500).json({ message: "Error while signing up the admin" });
   }
 };
+
 exports.login = async (req, res, next) => {
   const { email, password } = req.body;
   try {
@@ -63,6 +64,7 @@ exports.login = async (req, res, next) => {
     res.status(500).json({ messsage: "Server error" });
   }
 };
+
 exports.getUnverifiedOrganizations = async (req, res, next) => {
   let data = await Organization.find({ isVerified: false });
   const data_mapped = data.map((obj) => {
@@ -143,6 +145,7 @@ exports.verifyOrganization = async (req, res, next) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
 exports.deleteOrganization = async (req, res, next) => {
   const organizationId = req.params.organizationId;
   try {
@@ -159,18 +162,20 @@ exports.deleteOrganization = async (req, res, next) => {
       .json({ message: "Error deleting organization", error: error.message });
   }
 };
+
 function deserializeWithDelimiter(dataString, delimiter) {
   const dataArray = dataString.split(delimiter);
   const templateId = dataArray.pop();
   const objectsArray = dataArray.map((jsonString) => JSON.parse(jsonString));
   return [templateId, objectsArray];
 }
+
 async function createPDF(file_path, data_instance, template_id) {
   try {
     const credentials =
       PDFServicesSdk.Credentials.servicePrincipalCredentialsBuilder()
-        .withClientId("c69f66aa60dd4a718f84e509a8e5077a")
-        .withClientSecret("p8e-Evegkfh66jnyj6FCqHB2S1VHgjcz8bB7")
+        .withClientId(process.env.ADB_CLIENT)
+        .withClientSecret(process.env.ADB_SECRET)
         .build();
     const jsonDataForMerge = data_instance[0];
     const executionContext =
@@ -185,71 +190,80 @@ async function createPDF(file_path, data_instance, template_id) {
     const input = PDFServicesSdk.FileRef.createFromLocalFile(file_path);
     documentMergeOperation.setInput(input);
     const result = await documentMergeOperation.execute(executionContext);
-    const uniqueFileName = `Marksheet_${uuidv4()}.pdf`;
+    const uniqueFileName = `Certificate_${uuidv4()}.pdf`;
     await result
-      .saveAsFile("backend/emailbuf/" + uniqueFileName)
+      .saveAsFile("./emailbuf/" + uniqueFileName)
       .then((result) => {});
-    return "backend/emailbuf/" + uniqueFileName;
+    return "./emailbuf/" + uniqueFileName;
   } catch (error) {
     console.log("Exception encountered while executing operation", error);
   }
 }
-const path = require("path");
-
-const templatesDirectory = path.join(__dirname, "..", "templates/");
 
 exports.GetDetails = async (req, res) => {
   const UserPresent = await User.findOne({ email: req.body.email });
-  console.log(UserPresent);
+  // console.log(UserPresent);
+
   if (!UserPresent) {
     return res.status(400).json({ message: "User not present" });
   } else {
     const file_names = [];
     const data = UserPresent.totaldata;
+
     for (var i = 0; i < data.length; i++) {
       const [template_id, ObjectArray] = deserializeWithDelimiter(
         data[i].data,
         "#"
       );
+
+      // console.log(ObjectArray, template_id);
+
       const file_name = await createPDF(
-        templatesDirectory + template_id,
+        `./templates/${template_id}`,
         ObjectArray,
         template_id
       );
+
       file_names.push(file_name);
-      console.log(file_names);
     }
+
+    console.log(file_names);
+
     var zipper = new zip();
 
     for (var i = 0; i < file_names.length; i++) {
       zipper.addLocalFile(file_names[i]);
     }
+
     const uniqueZipID = uuidv4();
-    zipper.writeZip("zipped_files/" + uniqueZipID + ".zip");
+    zipper.writeZip("./zipped_files/" + uniqueZipID + ".zip");
     const transporter = nodemailer.createTransport({
-      service: "outlook",
+      service: "gmail",
       auth: {
         user: process.env.EMAIL,
         pass: process.env.PASSWORD,
       },
     });
+
     const mailOptions = {
       from: process.env.EMAIL,
       to: req.body.email,
       subject: "Your certificate from Verifier",
       attachments: [
         {
-          filename: "zipped_files/" + uniqueZipID + ".zip",
-          path: "zipped_files/" + uniqueZipID + ".zip",
+          filename: "./zipped_files/" + uniqueZipID + ".zip",
+          path: "./zipped_files/" + uniqueZipID + ".zip",
         },
       ],
     };
+
     const sendMail = util.promisify(transporter.sendMail).bind(transporter);
     const info = await sendMail(mailOptions);
 
     res.json(UserPresent.totaldata);
   }
 };
+
 exports.Analytics = async (req, res) => {
   try {
     const organizationCount = await Organization.countDocuments();

@@ -398,7 +398,7 @@ async function mergeAndSendEmail(
       PDFServicesSdk.ExecutionContext.create(credentials);
 
     const jsonDataForMerge = data_instance[0];
-    const uniqueFileName = `Certificate_${uuidv4()}.pdf`;
+    const uniqueFileIdentifier = `./file_buffer/Certificate_${uuidv4()}.pdf`;
 
     const documentMerge = PDFServicesSdk.DocumentMerge;
     const documentMergeOptions = documentMerge.options;
@@ -411,7 +411,7 @@ async function mergeAndSendEmail(
     documentMergeOperation.setInput(input);
     const result = await documentMergeOperation
       .execute(executionContext)
-      .then((result) => result.saveAsFile("./file_buffer/" + uniqueFileName))
+      .then((result) => result.saveAsFile(uniqueFileIdentifier))
       .then(async (result) => {
         const transporter = nodemailer.createTransport({
           service: "gmail",
@@ -424,18 +424,15 @@ async function mergeAndSendEmail(
           subject: "Certificate",
           attachments: [
             {
-              filename: "./file_buffer/" + uniqueFileName,
-              path: "./file_buffer/" + uniqueFileName,
+              filename: uniqueFileIdentifier,
+              path: uniqueFileIdentifier,
             },
           ],
         };
 
         const sendMail = util.promisify(transporter.sendMail).bind(transporter);
         const info = await sendMail(mailOptions);
-        const hash = await calculatePDFHash(
-          "./file_buffer/" + uniqueFileName,
-          salt
-        );
+        const hash = await calculatePDFHash(uniqueFileIdentifier, salt);
 
         const saved = await SaveUserData(data_instance, template_name);
 
@@ -454,7 +451,7 @@ async function mergeAndSendEmail(
           );
         }
 
-        fs.unlinkSync("./file_buffer/" + uniqueFileName);
+        fs.unlinkSync(uniqueFileIdentifier);
       })
       .catch((err) => {
         if (
@@ -513,11 +510,15 @@ function compareArraysIgnoringEmail(placeholderArray, attributeArray) {
   return arraysAreEqual;
 }
 
+// let emailAccounts = [
+//   { user: "Cloud62024@outlook.com", pass: "Cloud@66" },
+//   { user: "aaryan22441@outlook.com", pass: "aaryan@22441" },
+//   { user: "Vinayak122333@outlook.com", pass: "vinayak@122333" },
+//   { user: "karishma1232024@outlook.com", pass: "karishma@1232024" },
+// ];
+
 let emailAccounts = [
-  { user: "Cloud62024@outlook.com", pass: "Cloud@66" },
-  { user: "aaryan22441@outlook.com", pass: "aaryan@22441" },
-  { user: "Vinayak122333@outlook.com", pass: "vinayak@122333" },
-  { user: "karishma1232024@outlook.com", pass: "karishma@1232024" },
+  { user: "pixbysumit@gmail.com", pass: "rzyhvjbafmmktfnb" },
 ];
 
 function distributeRowsAmongEmails(rows, emailAccounts) {

@@ -15,6 +15,7 @@ function Regenerate() {
     }
     setShowAlert(false);
   };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     setLoading(true);
@@ -35,6 +36,7 @@ function Regenerate() {
         console.log("Request successful");
         setAlertMessage(`Email sent successfully.`);
         setAlertSeverity("success");
+        setEmail("");
         setShowAlert(true);
       } else {
         // Handle errors, maybe show an error message
@@ -64,7 +66,7 @@ function Regenerate() {
       </div>
       <div className="container cont">
         <div class="image">
-          <img src="regen-img.jpg" alt="Image" className="regImg" />
+          <img src="regen-img.jpg" alt="Regenerate" className="regImg" />
         </div>
         <div class="regenerateDiv">
           <h2>Regenerate</h2>
