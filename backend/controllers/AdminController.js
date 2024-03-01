@@ -6,15 +6,22 @@ const zip = require("adm-zip")
 const nodemailer = require("nodemailer");
 const util = require("util")
 const jwt = require("jsonwebtoken")
+const path = require('path');
 require("dotenv").config();
 
 const Admin = require("../models/AdminModel");
 const Organization = require("../models/OrganizationModel");
 const User = require("../models/UserData");
 
+const templatesDirectory = path.join(__dirname, '..', 'templates/');
+
+const {sendVerificationEmail,deserializeWithDelimiter,createPDF} = require("../utils/utils");
 exports.signup = async(req,res,next) => { 
-    const {email,password} = req.body;
     try {
+        const {email,password} = req.body;
+        if(!email || !password){
+            return res.status(400).json({message : "Please fill all the fields"});
+        }
         let admin = await Admin.findOne({email : email});
         if (admin){
             return res.status(400).json({message : "User already exists"})
@@ -38,8 +45,8 @@ exports.signup = async(req,res,next) => {
     } catch (error) {
         res.status(500).json({message : "Error while signing up the admin"})
     }
-      
 }
+
 exports.login = async(req,res,next) => {
     const {email,password} = req.body;
     try {
@@ -88,34 +95,7 @@ exports.getVerifiedOrganizations = async(req,res,next) =>{
     }
 }
 
-async function sendVerificationEmail(organization) {
-    const transporter = nodemailer.createTransport({
-      service: 'outlook',
-      auth: {
-        user: process.env.EMAIL,
-        pass: process.env.PASSWORD
-      }
-    });
-  
-    const mailOptions = {
-      from: process.env.EMAIL,
-      to: organization.email,
-      subject: 'Organization Verification',
-      text: 'Your organization has been successfully verified by Admin.'
-    };
-    let attempt = 1;
-    while (attempt <= 5) {
-      try {
-        const info = await transporter.sendMail(mailOptions);
-        console.log('Email sent:', info.response);
-        return;
-      } catch (error) {
-        console.error(`Error sending email (attempt ${attempt}):`, error);
-        attempt++;
-      }
-    }
-    console.error('Email could not be sent after 5 attempts.');
-  }
+
 
 exports.verifyOrganization = async(req,res,next) => {
     const organizationId = req.params.organizationId;
@@ -154,84 +134,57 @@ exports.deleteOrganization = async (req, res, next) => {
       res.status(500).json({ message: 'Error deleting organization', error: error.message });
     }
 };
-  function deserializeWithDelimiter(dataString, delimiter) {
-    const dataArray = dataString.split(delimiter);
-    const templateId = dataArray.pop();
-    const objectsArray = dataArray.map(jsonString => JSON.parse(jsonString));
-    return  [templateId, objectsArray];
-}
-async function createPDF(file_path,data_instance,template_id){
+exports.GetDetails = async (req, res) => {
+    const userPresent = await User.findOne({ email: req.body.email });
+
+    if (!userPresent) {
+        return res.status(400).json({ message: "User not present" });
+    }
+
+    const processItem = async (item) => {
+        const [templateId, objectArray] = deserializeWithDelimiter(item.data, "#");
+        const fileName = await createPDF(templatesDirectory + templateId, objectArray, templateId);
+        return fileName;
+    };
+
     try {
-        const credentials = PDFServicesSdk.Credentials
-            .servicePrincipalCredentialsBuilder()
-            .withClientId("c69f66aa60dd4a718f84e509a8e5077a")
-            .withClientSecret("p8e-Evegkfh66jnyj6FCqHB2S1VHgjcz8bB7")
-            .build();
-        const jsonDataForMerge = data_instance[0];
-        const executionContext = PDFServicesSdk.ExecutionContext.create(credentials);
-        const documentMerge = PDFServicesSdk.DocumentMerge;
-        const documentMergeOptions = documentMerge.options;
-        const options = new documentMergeOptions.DocumentMergeOptions(jsonDataForMerge, documentMergeOptions.OutputFormat.PDF);
-        const documentMergeOperation = documentMerge.Operation.createNew(options);
-        const input = PDFServicesSdk.FileRef.createFromLocalFile(file_path);
-        documentMergeOperation.setInput(input);
-        const result = await documentMergeOperation.execute(executionContext);
-        const uniqueFileName = `Marksheet_${uuidv4()}.pdf`;
-        await result.saveAsFile('backend/emailbuf/'+uniqueFileName)
-        .then((result) =>{})
-        return 'backend/emailbuf/'+uniqueFileName
-    } catch (error) {
-        console.log('Exception encountered while executing operation', error);
-    }
-}
-const path = require('path');
-
-const templatesDirectory = path.join(__dirname, '..', 'templates/');
-exports.GetDetails = async(req,res) => {
-    const UserPresent = await User.findOne({email : req.body.email});
-    console.log(UserPresent)
-    if (!UserPresent){
-        return res.status(400).json({message : "User not present"})
-    }
-    else{
-        const file_names = []
-        const data = UserPresent.totaldata;
-        for (var i = 0;i < data.length;i++){
-            const [template_id,ObjectArray] = deserializeWithDelimiter(data[i].data,"#");
-            const file_name = await createPDF(templatesDirectory+template_id,ObjectArray,template_id)
-            file_names.push(file_name);
-            console.log(file_names)
-        }
+        const fileNames = await Promise.all(userPresent.totaldata.map(processItem));
         var zipper = new zip();
-
-        for (var i = 0 ;i < file_names.length;i++){
-            zipper.addLocalFile(file_names[i])
+        for (var i = 0 ;i < fileNames.length;i++){
+            zipper.addLocalFile(fileNames[i])
         }
         const uniqueZipID = uuidv4();
-        zipper.writeZip("zipped_files/"+uniqueZipID +".zip");
+        const zipFileName = "zipped_files/" + uniqueZipID + ".zip";
+        zipper.writeZip(zipFileName);
+
         const transporter = nodemailer.createTransport({
             service: 'outlook',
             auth: {
-                user:  process.env.EMAIL,
+                user: process.env.EMAIL,
                 pass: process.env.PASSWORD
             }
         });
+
         const mailOptions = {
-            from:  process.env.EMAIL,
+            from: process.env.EMAIL,
             to: req.body.email,
             subject: 'Your certificate from Verifier',
             attachments: [{
-                filename: 'zipped_files/'+uniqueZipID + '.zip',
-                path: 'zipped_files/'+uniqueZipID + '.zip'
+                filename: zipFileName,
+                path: zipFileName
             }],
         };
+
         const sendMail = util.promisify(transporter.sendMail).bind(transporter);
-        const info = await sendMail(mailOptions);
-        
-        
-        res.json(UserPresent.totaldata)
+        await sendMail(mailOptions);
+
+        res.json(userPresent.totaldata);
+    } catch (error) {
+        console.error('Error processing and sending certificates:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
-}
+};
+
 exports.Analytics = async (req, res) => {
     try {
       const organizationCount = await Organization.countDocuments();
