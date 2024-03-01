@@ -294,8 +294,8 @@ async function mergeAndSendEmail(file_path, data_instance, template_name, email)
     try {
         const credentials = PDFServicesSdk.Credentials
             .servicePrincipalCredentialsBuilder()
-            .withClientId("c69f66aa60dd4a718f84e509a8e5077a")
-            .withClientSecret("p8e-Evegkfh66jnyj6FCqHB2S1VHgjcz8bB7")
+            .withClientId("82bd5d4eb8a54f20b745bc4b8401f86e")
+            .withClientSecret("p8e-0bWRClCNL0n6UkPRT6Di6CekCiZG00tB")
             .build();
 
         const jsonDataForMerge = data_instance[0];
@@ -400,6 +400,7 @@ async function processRowsForEmail(email, rows,file_path,template_name) {
 exports.uploadCSVandSelectTemplate = async(req,res,next) => {
     const template = req.body.template_id;
     text = await extractTextFromDocx("../backend/templates/" + template)
+    console.log(text)
     let placeholders = countPlaceholdersInText(text);
     let column_names = await getAttributesFromCSV("../backend/csv_data/" + req.file.filename)
     if(compareArraysIgnoringEmail(placeholders,column_names) === false){

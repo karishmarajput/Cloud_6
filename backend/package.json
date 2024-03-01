@@ -11,6 +11,7 @@
   "dependencies": {
     "@adobe/pdfservices-node-sdk": "^3.4.2",
     "adm-zip": "^0.5.10",
+    "any-text": "^1.2.0",
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.2",
     "convertapi": "^1.13.0",

@@ -5,6 +5,7 @@ const csv = require("csv-parser");
 const mammoth = require('mammoth');
 const fs = require("fs");
 const crypto = require("crypto");
+var reader = require('any-text');
 
 async function sendVerificationEmail(organization) {
     const transporter = nodemailer.createTransport({
@@ -157,18 +158,28 @@ function parseCSVtoJSON(csvFilePath,placeholders){
     })
 }
 
-async function extractTextFromDocx(filePath) {
+/*async function extractTextFromDocx(filePath) {
     try {
         const result = await mammoth.extractRawText({path : filePath});
+        console.log(result)
         return result.value;
     } catch (error) {
         throw error;
     }
+}*/
+async function extractTextFromDocx(filePath) {
+    try {
+        const text = await reader.getText(filePath);
+        return text;
+    } catch (error) {
+        throw error;
+    }
 }
+
 function countPlaceholdersInText(text) {
     const pattern = /{{.*?}}/g;
     const matches = text.match(pattern) || [];
-    return matches.map(match => match.replace(/{{|}}/g, '').trim());
+    return [...new Set(matches.map(match => match.replace(/{{|}}/g, '').trim()))];
 }
 function calculatePDFHash(filePath, salt, algorithm = 'sha256') {
     const hash = crypto.createHash(algorithm);
