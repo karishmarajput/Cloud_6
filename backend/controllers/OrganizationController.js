@@ -104,9 +104,7 @@ exports.signup = async (req, res, next) => {
 exports.login = async (req, res, next) => {
   const { email, password } = req.body;
   try {
-    console.log(email, password);
     let org = await Organization.findOne({ email: email });
-    console.log(org);
     if (!org) {
       return res.status(400).json({ message: "Organization doesn't exist" });
     }
@@ -209,7 +207,6 @@ exports.uploadTemplate = async(req,res,next) => {
 exports.deleteTemplate = async (req, res, next) => {
   try {
     const templateID = req.params.templateID;
-    console.log(templateID);
     const org = await Organization.findById(req.userData.org.id);
     const templateIndex = org.templates.findIndex(
       (template) => template._id.toString() === templateID
@@ -250,8 +247,6 @@ exports.getAllTemplates = async (req, res, next) => {
   try {
     await Organization.findById(req.userData.org.id).then((org, err) => {
       if (org) {
-        console.log(org);
-        console.log(org.templates);
         return res.status(200).json([org.templates]);
       } else {
         return res
@@ -377,49 +372,13 @@ function distributeRowsAmongEmails(rows, emailAccounts) {
   return rowsPerEmail;
 }
 
-async function processRowsWithParallelEmails(
-  rows,
-  emailAccounts,
-  file_path,
-  template_name
-) {
-  try {
-    const rowsPerEmail = distributeRowsAmongEmails(rows, emailAccounts);
-    console.log("Rows per email:");
-    console.log(rowsPerEmail);
-    await Promise.all(
-      emailAccounts.map((email, index) => {
-        const emailRows = rowsPerEmail[JSON.stringify(email)] || [];
-        console.log("Email rows:");
-        console.log(emailRows);
-        // return processRowsForEmail(email, emailRows, file_path, template_name);
-        if (emailRows.length > 0) {
-          return processRowsForEmail(
-            email,
-            emailRows,
-            file_path,
-            template_name
-          );
-        } else {
-          console.log(
-            `Skipping processing for email ${email} as rows array is empty.`
-          );
-        }
-      })
-    );
 
-    console.log("All rows processed successfully.");
-  } catch (err) {
-    console.error("Error processing rows:", err);
-  }
-}
 
 async function processRowsWithParallelEmails(rows, emailAccounts,file_path,template_name) {
     try {
         const rowsPerEmail = distributeRowsAmongEmails(rows, emailAccounts);
         await Promise.all(emailAccounts.map((email, index) => {
             const emailRows = rowsPerEmail[JSON.stringify(email)] || [];
-            console.log(emailRows)
             return processRowsForEmail(email, emailRows,file_path,template_name);
         }));
 
