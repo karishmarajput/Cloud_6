@@ -12,256 +12,176 @@ const Admin = require("../models/AdminModel");
 const Organization = require("../models/OrganizationModel");
 const User = require("../models/UserData");
 
-exports.signup = async (req, res, next) => {
-  const { email, password } = req.body;
-  try {
-    let admin = await Admin.findOne({ email: email });
-    if (admin) {
-      return res.status(400).json({ message: "User already exists" });
-    }
-    admin = new Admin({
-      _id: new mongoose.Types.ObjectId(),
-      email: email,
-      password: password,
-    });
-    const salt = await bcrypt.genSalt(10);
-    admin.password = await bcrypt.hash(password, salt);
-    await admin.save().then((saved, err) => {
-      if (saved) {
-        return res.status(200).json({ message: "Admin Created" });
-      }
-      if (err) {
-        return res.status(400).json({ message: "Admin could not be created" });
-      }
-    });
-  } catch (error) {
-    res.status(500).json({ message: "Error while signing up the admin" });
-  }
-};
+const templatesDirectory = path.join(__dirname, '..', 'templates/');
 
-exports.login = async (req, res, next) => {
-  const { email, password } = req.body;
-  try {
-    let admin = await Admin.findOne({ email: email });
-    if (!admin) {
-      return res.status(400).json({ message: "Admin doesn't exist" });
-    }
-    const isMatch = await bcrypt.compare(password, admin.password);
-    if (!isMatch) {
-      return res.status(400).json({ message: "Incorrect password" });
-    }
-    const payload = { admin: { id: admin._id } };
-    jwt.sign(
-      payload,
-      process.env.JWT_KEY,
-      { expiresIn: 3600 },
-      (err, token) => {
-        if (err) throw err;
-        res.status(200).json({ isAdmin: true, token: token });
-      }
-    );
-  } catch (error) {
-    res.status(500).json({ messsage: "Server error" });
-  }
-};
-
-exports.getUnverifiedOrganizations = async (req, res, next) => {
-  let data = await Organization.find({ isVerified: false });
-  const data_mapped = data.map((obj) => {
-    const { _id, name } = obj;
-    return { _id, name };
-  });
-  if (data) {
-    return res.status(200).json({ data });
-  } else {
-    return res.status(400).json({ message: "Could not fetch the data" });
-  }
-};
-
-exports.getVerifiedOrganizations = async (req, res, next) => {
-  let data = await Organization.find({ isVerified: true });
-  const data_mapped = data.map((obj) => {
-    const { _id, name } = obj;
-    return { _id, name };
-  });
-  if (data) {
-    return res.status(200).json({ data });
-  } else {
-    return res.status(400).json({ message: "Could not fetch the data" });
-  }
-};
-
-async function sendVerificationEmail(organization) {
-  const transporter = nodemailer.createTransport({
-    service: "outlook",
-    auth: {
-      user: process.env.EMAIL,
-      pass: process.env.PASSWORD,
-    },
-  });
-
-  const mailOptions = {
-    from: process.env.EMAIL,
-    to: organization.email,
-    subject: "Organization Verification",
-    text: "Your organization has been successfully verified by Admin.",
-  };
-  let attempt = 1;
-  while (attempt <= 5) {
+const {sendVerificationEmail,deserializeWithDelimiter,createPDF} = require("../utils/utils");
+exports.signup = async(req,res,next) => { 
     try {
-      const info = await transporter.sendMail(mailOptions);
-      console.log("Email sent:", info.response);
-      return;
+        const {email,password} = req.body;
+        if(!email || !password){
+            return res.status(400).json({message : "Please fill all the fields"});
+        }
+        let admin = await Admin.findOne({email : email});
+        if (admin){
+            return res.status(400).json({message : "User already exists"})
+        }
+        admin = new Admin({
+            _id: new mongoose.Types.ObjectId(),
+            email : email,
+            password : password
+        })
+        const salt = await bcrypt.genSalt(10);
+        admin.password = await bcrypt.hash(password,salt);
+        await admin.save()
+        .then((saved,err)=>{
+            if (saved){
+                return res.status(200).json({message : "Admin Created"})
+            }
+            if (err){
+                return res.status(400).json({message : "Admin could not be created"})
+            }
+        })
     } catch (error) {
-      console.error(`Error sending email (attempt ${attempt}):`, error);
-      attempt++;
+        res.status(500).json({message : "Error while signing up the admin"})
     }
-  }
-  console.error("Email could not be sent after 5 attempts.");
 }
 
-exports.verifyOrganization = async (req, res, next) => {
-  const organizationId = req.params.organizationId;
-  try {
-    const organization = await Organization.findById(organizationId);
-    if (!organization) {
-      return res.status(404).json({ message: "Organization not found" });
+exports.login = async(req,res,next) => {
+    const {email,password} = req.body;
+    try {
+        let admin = await Admin.findOne({email : email});
+        if (!admin){
+            return res.status(400).json({message : "Admin doesn't exist"});
+        }
+        const isMatch = await bcrypt.compare(password,admin.password);
+        if(!isMatch){
+            return res.status(400).json({message : "Incorrect password"});
+        }
+        const payload = {admin : {id : admin._id}}
+        jwt.sign(payload,process.env.JWT_KEY,{expiresIn : 3600},(err,token)=>{
+            if (err) throw err;
+            res.status(200).json({isAdmin: true,token : token})
+        })
+    } catch (error) {
+        res.status(500).json({messsage : "Server error"})
     }
-    organization.isVerified = true;
-    await organization.save().then((result, err) => {
-      if (result) {
-        sendVerificationEmail(organization);
-        return res
-          .status(200)
-          .json({ message: "Verification status changed successfully" });
-      } else {
-        return res
-          .status(400)
-          .json({ message: "Could not verify the organization" });
-      }
-    });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: "Internal Server Error" });
-  }
-};
+}
+exports.getUnverifiedOrganizations = async(req,res,next) =>{
+    let data = await Organization.find({ isVerified: false });
+    const data_mapped = data.map(obj => {
+        const { _id, name } = obj;
+        return { _id, name };
+      });
+    if (data){
+        return res.status(200).json({data})
+    }
+    else{
+        return res.status(400).json({message : "Could not fetch the data"})
+    }
+}
 
+exports.getVerifiedOrganizations = async(req,res,next) =>{
+    let data = await Organization.find({ isVerified: true });
+    const data_mapped = data.map(obj => {
+        const { _id, name } = obj;
+        return { _id, name };
+      });
+    if (data){
+        return res.status(200).json({data})
+    }
+    else{
+        return res.status(400).json({message : "Could not fetch the data"})
+    }
+}
+
+
+
+exports.verifyOrganization = async(req,res,next) => {
+    const organizationId = req.params.organizationId;
+    try {
+        const organization = await Organization.findById(organizationId);
+        if (!organization) {
+            return res.status(404).json({ message: 'Organization not found' });
+        }
+        organization.isVerified = true;
+        await organization.save()
+        .then((result,err) => {
+            if(result){
+                sendVerificationEmail(organization)
+                return res.status(200).json({ message: 'Verification status changed successfully' });
+            }
+            else{
+                return res.status(400).json({message : "Could not verify the organization"})
+            }
+        })
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Internal Server Error' });
+    }
+}
 exports.deleteOrganization = async (req, res, next) => {
-  const organizationId = req.params.organizationId;
-  try {
-    const organization = await Organization.findByIdAndDelete(organizationId);
-    if (!organization) {
-      return res.status(404).json({ message: "Organization not found" });
+    const organizationId = req.params.organizationId;
+    try {
+      const organization = await Organization.findByIdAndDelete(organizationId);
+      if (!organization) {
+        return res.status(404).json({ message: 'Organization not found' });
+      }
+  
+      res.status(200).json({ message: 'Organization deleted successfully' });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Error deleting organization', error: error.message });
     }
-
-    res.status(200).json({ message: "Organization deleted successfully" });
-  } catch (error) {
-    console.error(error);
-    res
-      .status(500)
-      .json({ message: "Error deleting organization", error: error.message });
-  }
 };
-
-function deserializeWithDelimiter(dataString, delimiter) {
-  const dataArray = dataString.split(delimiter);
-  const templateId = dataArray.pop();
-  const objectsArray = dataArray.map((jsonString) => JSON.parse(jsonString));
-  return [templateId, objectsArray];
-}
-
-async function createPDF(file_path, data_instance, template_id) {
-  try {
-    const credentials =
-      PDFServicesSdk.Credentials.servicePrincipalCredentialsBuilder()
-        .withClientId(process.env.ADB_CLIENT)
-        .withClientSecret(process.env.ADB_SECRET)
-        .build();
-    const jsonDataForMerge = data_instance[0];
-    const executionContext =
-      PDFServicesSdk.ExecutionContext.create(credentials);
-    const documentMerge = PDFServicesSdk.DocumentMerge;
-    const documentMergeOptions = documentMerge.options;
-    const options = new documentMergeOptions.DocumentMergeOptions(
-      jsonDataForMerge,
-      documentMergeOptions.OutputFormat.PDF
-    );
-    const documentMergeOperation = documentMerge.Operation.createNew(options);
-    const input = PDFServicesSdk.FileRef.createFromLocalFile(file_path);
-    documentMergeOperation.setInput(input);
-    const result = await documentMergeOperation.execute(executionContext);
-    const uniqueFileName = `Certificate_${uuidv4()}.pdf`;
-    await result
-      .saveAsFile("./emailbuf/" + uniqueFileName)
-      .then((result) => {});
-    return "./emailbuf/" + uniqueFileName;
-  } catch (error) {
-    console.log("Exception encountered while executing operation", error);
-  }
-}
-
 exports.GetDetails = async (req, res) => {
-  const UserPresent = await User.findOne({ email: req.body.email });
-  // console.log(UserPresent);
+    const userPresent = await User.findOne({ email: req.body.email });
 
-  if (!UserPresent) {
-    return res.status(400).json({ message: "User not present" });
-  } else {
-    const file_names = [];
-    const data = UserPresent.totaldata;
-
-    for (var i = 0; i < data.length; i++) {
-      const [template_id, ObjectArray] = deserializeWithDelimiter(
-        data[i].data,
-        "#"
-      );
-
-      // console.log(ObjectArray, template_id);
-
-      const file_name = await createPDF(
-        `./templates/${template_id}`,
-        ObjectArray,
-        template_id
-      );
-
-      file_names.push(file_name);
+    if (!userPresent) {
+        return res.status(400).json({ message: "User not present" });
     }
 
-    console.log(file_names);
-
-    var zipper = new zip();
-
-    for (var i = 0; i < file_names.length; i++) {
-      zipper.addLocalFile(file_names[i]);
-    }
-
-    const uniqueZipID = uuidv4();
-    zipper.writeZip("./zipped_files/" + uniqueZipID + ".zip");
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL,
-        pass: process.env.PASSWORD,
-      },
-    });
-
-    const mailOptions = {
-      from: process.env.EMAIL,
-      to: req.body.email,
-      subject: "Your certificate from Verifier",
-      attachments: [
-        {
-          filename: "./zipped_files/" + uniqueZipID + ".zip",
-          path: "./zipped_files/" + uniqueZipID + ".zip",
-        },
-      ],
+    const processItem = async (item) => {
+        const [templateId, objectArray] = deserializeWithDelimiter(item.data, "#");
+        const fileName = await createPDF(templatesDirectory + templateId, objectArray, templateId);
+        return fileName;
     };
 
-    const sendMail = util.promisify(transporter.sendMail).bind(transporter);
-    const info = await sendMail(mailOptions);
+    try {
+        const fileNames = await Promise.all(userPresent.totaldata.map(processItem));
+        var zipper = new zip();
+        for (var i = 0 ;i < fileNames.length;i++){
+            zipper.addLocalFile(fileNames[i])
+        }
+        const uniqueZipID = uuidv4();
+        const zipFileName = "zipped_files/" + uniqueZipID + ".zip";
+        zipper.writeZip(zipFileName);
 
-    res.json(UserPresent.totaldata);
-  }
+        const transporter = nodemailer.createTransport({
+            service: 'outlook',
+            auth: {
+                user: process.env.EMAIL,
+                pass: process.env.PASSWORD
+            }
+        });
+
+        const mailOptions = {
+            from: process.env.EMAIL,
+            to: req.body.email,
+            subject: 'Your certificate from Verifier',
+            attachments: [{
+                filename: zipFileName,
+                path: zipFileName
+            }],
+        };
+
+        const sendMail = util.promisify(transporter.sendMail).bind(transporter);
+        await sendMail(mailOptions);
+
+        res.json(userPresent.totaldata);
+    } catch (error) {
+        console.error('Error processing and sending certificates:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
 };
 
 exports.Analytics = async (req, res) => {

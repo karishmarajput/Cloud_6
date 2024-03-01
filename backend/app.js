@@ -5,8 +5,15 @@ const morgan = require("morgan");
 const bodyParser = require("body-parser");
 const path = require("path");
 const mongoose = require("mongoose");
-mongoose.connect(process.env.MONGODB_URL);
-// mongoose.connect(process.env.MONGO_DEV_URL);
+mongoose.connect(process.env.MONGODB_URL)
+.then((conn,err) => {
+  if(conn){
+    console.log("MongoDB connected")
+  }
+  else{
+    console.log("Could not connect to the database");
+  }
+})
 mongoose.Promise = global.Promise;
 const adminroute = require("./routes/admin");
 const organizationroute = require("./routes/organisation");
