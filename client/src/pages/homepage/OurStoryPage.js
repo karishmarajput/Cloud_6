@@ -59,6 +59,7 @@ const OurStoryPage = () => {
             />
           </Col>
         </Row>
+        
       </Container>
     </section>
   );

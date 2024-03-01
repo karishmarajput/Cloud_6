@@ -440,6 +440,7 @@ function compareArraysIgnoringEmail(placeholderArray, attributeArray) {
 
 
 let emailAccounts = [
+    {user:"cloud6agnethon@outlook.com",pass :"cloud6123"},
     {user : "Cloud62024@outlook.com",pass : "Cloud@66"},
     {user : "aaryan22441@outlook.com",pass : "aaryan@22441"},
     {user : "Vinayak122333@outlook.com",pass : "vinayak@122333"},
@@ -488,11 +489,8 @@ async function processRowsForEmail(email, rows,file_path,template_name) {
 exports.uploadCSVandSelectTemplate = async(req,res,next) => {
     const template = req.body.template_id;
     text = await extractTextFromDocx("../backend/templates/" + template)
-    console.log(text)
     let placeholders = countPlaceholdersInText(text);
-    console.log(placeholders)
     let column_names = await getAttributesFromCSV("../backend/csv_data/" + req.file.filename)
-    console.log(column_names)
     if(compareArraysIgnoringEmail(placeholders,column_names) === false){
         fs.unlinkSync("../backend/csv_data/" + req.file.filename)
         return res.status(400).json({message : "Placeholders and csv attributes do not match"})
@@ -503,7 +501,7 @@ exports.uploadCSVandSelectTemplate = async(req,res,next) => {
     for(var i = 0 ;i < ans.length;i++){
         await mergeAndSendEmail("../backend/templates/" + template,ans[i],template)
     }*/
-    processRowsWithParallelEmails(ans,emailAccounts,"../backend/templates/" + template,template)
+    await processRowsWithParallelEmails(ans,emailAccounts,"../backend/templates/" + template,template)
     return res.status(200).json({message : "done"})
     
 }      

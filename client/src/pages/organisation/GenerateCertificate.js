@@ -5,7 +5,7 @@ import './generationCertificate.css'
 import Footer from "../components/Footer";
 import Loader from '../components/Loader';
 import CustomAlert from '../components/Alert';
-
+import AdminNavbar from "../components/AdminNavbar";
 function GenerateCertificate() {
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [file, setFile] = useState(null);
@@ -117,8 +117,13 @@ function GenerateCertificate() {
       if (response.ok) {
         setAlertMessage('Successfully generated certificates and mailed to participants.');
         setAlertSeverity('success');
+        setShowAlert(true);
       } else {
-        throw new Error('Failed to submit');
+        setAlertMessage(`Failed to submit`);
+        setAlertSeverity('error');
+        setShowAlert(true);
+        // throw new Error('Failed to submit');
+        
       }
     } catch (error) {
       console.error('Error submitting:', error);
@@ -178,8 +183,8 @@ function GenerateCertificate() {
 
   return (
     <div>
-      <div className="navLogin">
-        <NavbarCertif textColor="#FFFFFF" />
+     <div className="navLogin">
+        <AdminNavbar  textColor="#FFFFFF" />
       </div>
       <CustomAlert
         open={showAlert}

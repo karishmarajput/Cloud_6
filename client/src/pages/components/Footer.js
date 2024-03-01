@@ -24,7 +24,7 @@ const Footer = () => {
               </a>
               <span className="text-muted">|</span>
               <a
-                href="https://github.com/karishmarajput/cloud6"
+                href="https://github.com/karishmarajput/Cloud_6"
                 className="text-white mx-2"
                 style={linkStyle}
               >

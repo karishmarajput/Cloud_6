@@ -45,7 +45,7 @@ function DragDropFile() {
             setShowAlert(true);
             
           } else {
-            setAlertMessage('Failed to upload file');
+            setAlertMessage('Invalid Certificate.');
             setAlertSeverity('error')
             setShowAlert(true);
             throw new Error('Failed to upload file');
@@ -53,8 +53,8 @@ function DragDropFile() {
           }
         })
         .catch((error) => {
-          console.error('Error uploading file:', error);
-          setAlertMessage(`Failed to uploading file ${error}`);
+          console.error('Invalid Certificate.');
+          setAlertMessage('Invalid Certificate.');
             setAlertSeverity('error')
             setShowAlert(true);
         })

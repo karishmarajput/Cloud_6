@@ -234,7 +234,8 @@ exports.GetDetails = async(req,res) => {
 }
 exports.Analytics = async (req, res) => {
     try {
-      const organizationCount = await Organization.countDocuments();
+        const organizationCount = await Organization.countDocuments({ isVerified: true });
+
       console.log(organizationCount)
       let templateCount = 0;
       const organizations = await Organization.find();

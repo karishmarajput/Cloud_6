@@ -13,6 +13,7 @@ function LandingPage() {
       <FeaturePage />
       <WorkingPage />
       <OurStoryPage />
+     
       <Footer />
     </div>
   );

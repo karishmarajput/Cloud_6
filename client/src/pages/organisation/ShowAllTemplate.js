@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Footer from "../components/Footer";
 import Modal from 'react-modal';
 import { MdDelete } from "react-icons/md";
+import AdminNavbar from "../components/AdminNavbar";
 function ShowAllTemplate() {
     const [templates, setTemplates] = useState([]);
     const [selectedTemplate, setSelectedTemplate] = useState(null); // State for selected template
@@ -64,7 +65,7 @@ function ShowAllTemplate() {
     return (
         <div>
             <div className="navLogin">
-                <NavbarCertif textColor="#FFFFFF" />
+                <AdminNavbar textColor="#FFFFFF" />
             </div>
             <div className="showAllTemp">
             <h1 className="p-5"><b>Templates</b></h1>
@@ -78,17 +79,17 @@ function ShowAllTemplate() {
                             onClick={() => handleTemplateClick(template)}
                             style={{ position: 'relative' }}
                         >
-                            {hoveredTemplate === template._id && !template.publicBool &&
+                            {hoveredTemplate === template._id &&
                                 <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(255, 255, 255, 0.5)' }}>
                                     <button onClick={() => handleDeleteTemplate(template._id)} style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>Delete <MdDelete /></button>
                                 </div>
                             }
-                            {
+                            {/* {
                                 hoveredTemplate === template._id && template.publicBool &&
                                 <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(255, 255, 255, 0.5)' }}>
                                     <p style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', color:'green',fontWeight:700,fontSize:'1rem' }}>Public Template</p>
                                  </div>   
-                            }
+                            } */}
                             <img
                             
                                 src={`http://localhost:8000/image_files/${template.name}`}
