@@ -5,6 +5,11 @@ import Footer from "../components/Footer";
 import { Container, Row, Col } from "react-bootstrap";
 
 function OgRegister() {
+  const [loading, setLoading] = useState(false);
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertSeverity, setAlertSeverity] = useState('error');
+  const [alertMessage, setAlertMessage] = useState('');
+
   // const [organizationNumber, setOrganizationNumber] = useState('');
   const [name, setName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -33,7 +38,7 @@ function OgRegister() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    setLoading(true);
     try {
       const response = await fetch('http://localhost:8000/organization/signup', {
         method: 'POST',
@@ -50,11 +55,16 @@ function OgRegister() {
       });
 
       if (response.ok) {
-
+        setAlertMessage(`Registration successful! You will receive a mail once verified by admin`);
+        setAlertSeverity('Success');
+        setShowAlert(true);
         console.log('Registration successful! You will receive a mail once verified by admin');
       } else {
         console.log(response)
         console.error('Registration failed');
+        setAlertMessage(`Registration failed`);
+        setAlertSeverity('error');
+        setShowAlert(true);
       }
     } catch (error) {
       console.error('Error:', error);

@@ -18,7 +18,8 @@ function OgLogin() {
   useEffect(() => {
     const authToken = localStorage.getItem("authToken");
   }, []);
-  const handleemailChange = (e) => {
+
+  const handleEmailChange = (e) => {
     setemail(e.target.value);
   };
 
@@ -94,12 +95,12 @@ function OgLogin() {
             <h2 className="header-org">Login Form</h2>
             <form className="login-form-org" onSubmit={handleSubmit}>
               <div className="form-group-login">
-                <label htmlFor="email">Organisation Number:</label>
+                <label htmlFor="email">Organisation Email:</label>
                 <input
-                  type="text"
+                  type="email"
                   id="email"
                   value={email}
-                  onChange={handleemailChange}
+                  onChange={handleEmailChange}
                 />
               </div>
               <div className="form-group-login">
