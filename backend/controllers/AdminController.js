@@ -1,14 +1,13 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
-const PDFServicesSdk = require('@adobe/pdfservices-node-sdk');
-const {v4 : uuidv4} = require("uuid")
-const zip = require("adm-zip")
+const PDFServicesSdk = require("@adobe/pdfservices-node-sdk");
+const { v4: uuidv4 } = require("uuid");
+const zip = require("adm-zip");
 const nodemailer = require("nodemailer");
-const util = require("util")
-const jwt = require("jsonwebtoken")
-const path = require('path');
+const util = require("util");
+const jwt = require("jsonwebtoken");
 require("dotenv").config();
-
+const path = require("path");
 const Admin = require("../models/AdminModel");
 const Organization = require("../models/OrganizationModel");
 const User = require("../models/UserData");
@@ -186,15 +185,19 @@ exports.GetDetails = async (req, res) => {
 };
 
 exports.Analytics = async (req, res) => {
-    try {
-      const organizationCount = await Organization.countDocuments();
-      console.log(organizationCount)
-      let templateCount = 0;
-      const organizations = await Organization.find();
-      organizations.forEach(org => {templateCount += org.templates.length;});
-      res.status(200).json({orgCount : organizationCount,templateCount : templateCount});
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: 'Internal Server Error' });
-    }
+  try {
+    const organizationCount = await Organization.countDocuments();
+    console.log(organizationCount);
+    let templateCount = 0;
+    const organizations = await Organization.find();
+    organizations.forEach((org) => {
+      templateCount += org.templates.length;
+    });
+    res
+      .status(200)
+      .json({ orgCount: organizationCount, templateCount: templateCount });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 };

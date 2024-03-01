@@ -3,18 +3,18 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const fs = require("fs");
 const csv = require("csv-parser");
-const util = require("util")
+const util = require("util");
 const { resolve } = require("path");
-const {Document} = require("docxyz")
-const crypto = require('crypto');
-const mammoth = require('mammoth');
-const PDFServicesSdk = require('@adobe/pdfservices-node-sdk');
-const nodemailer = require('nodemailer');
-const {v4 : uuidv4} = require("uuid")
-const ethers = require("ethers")
-var convertapi = require("convertapi")('ozeDVGketrfbznX6');
-require("dotenv").config()
-const { convert } = require('html-to-image');
+const { Document } = require("docxyz");
+const crypto = require("crypto");
+const mammoth = require("mammoth");
+const PDFServicesSdk = require("@adobe/pdfservices-node-sdk");
+const nodemailer = require("nodemailer");
+const { v4: uuidv4 } = require("uuid");
+const ethers = require("ethers");
+var convertapi = require("convertapi")("ozeDVGketrfbznX6");
+require("dotenv").config();
+const { convert } = require("html-to-image");
 
 const Organization = require("../models/OrganizationModel");
 const uploadFile = require("../middlewares/upload")
@@ -64,58 +64,101 @@ exports.signup = async(req,res,next) => {
         res.status(500).json({message : "Error while signing up the organization"})
     }
 }
+//Organization Signup
+exports.signup = async (req, res, next) => {
+  const { name, email, phoneNumber, password } = req.body;
+  try {
+    let org = await Organization.findOne({ email: email });
+    if (org) {
+      return res.status(400).json({ message: "Organization already exists" });
+    }
+    org = new Organization({
+      _id: new mongoose.Types.ObjectId(),
+      name: name,
+      email: email,
+      password: password,
+      phoneNumber: phoneNumber,
+      isVerified: false,
+    });
+    const salt = await bcrypt.genSalt(10);
+    org.password = await bcrypt.hash(password, salt);
+    await org.save().then((saved, err) => {
+      if (saved) {
+        return res.status(200).json({
+          message: "Organization Created. Wait for Admin verification",
+        });
+      }
+      if (err) {
+        return res.status(400).json({ message: "Could not save organization" });
+      }
+    });
+  } catch (error) {
+    console.log(error.message);
+    res
+      .status(500)
+      .json({ message: "Error while signing up the organization" });
+  }
+};
 
 //Organization Login
-exports.login = async(req,res,next) => {
-    const {email,password} = req.body;
-    try {
-        console.log(email,password)
-        let org = await Organization.findOne({email : email});
-        console.log(org)
-        if (!org){
-            return res.status(400).json({message : "Organization doesn't exist"});
-        }
-        if (!org.isVerified){
-            return res.status(401).json({message : "Organization not yet verified"})
-        }
-        const isMatch = await bcrypt.compare(password,org.password);
-
-        if(!isMatch){
-            return res.status(400).json({message : "Incorrect password"});
-        }
-        const payload = {
-            org : {
-                id : org._id
-            }
-        }
-        jwt.sign(payload,process.env.JWT_KEY,{expiresIn : 3600},(err,token)=>{
-            if (err) throw err;
-            res.status(200).json({_id : org._id,name : org.name,token : token})
-        })
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({messsage : "Server error"})
+exports.login = async (req, res, next) => {
+  const { email, password } = req.body;
+  try {
+    console.log(email, password);
+    let org = await Organization.findOne({ email: email });
+    console.log(org);
+    if (!org) {
+      return res.status(400).json({ message: "Organization doesn't exist" });
     }
-}
+    if (!org.isVerified) {
+      return res.status(401).json({ message: "Organization not yet verified" });
+    }
+    const isMatch = await bcrypt.compare(password, org.password);
+
+    if (!isMatch) {
+      return res.status(400).json({ message: "Incorrect password" });
+    }
+    const payload = {
+      org: {
+        id: org._id,
+      },
+    };
+    jwt.sign(
+      payload,
+      process.env.JWT_KEY,
+      { expiresIn: 3600 },
+      (err, token) => {
+        if (err) throw err;
+        res.status(200).json({ _id: org._id, name: org.name, token: token });
+      }
+    );
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ messsage: "Server error" });
+  }
+};
 
 //Get Templates of a particular organization
-exports.getMyTemplates = async(req,res,next) => {
-    try {
-        const org = await Organization.findById(req.userData.org.id);
-        if(!org){
-            return res.status(400).json({message : "The organization doesn't exist"});
-        }
-        const templates = org.templates;
-        const templates_mapped = templates.map(obj => {
-            const { _id, name,publicBool } = obj;
-            return { _id, name,publicBool };
-        });
-        return res.status(200).json({data : templates_mapped})
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({message : "Server Error"})
+exports.getMyTemplates = async (req, res, next) => {
+  try {
+    const org = await Organization.findById(req.userData.org.id);
+    if (!org) {
+      return res
+        .status(400)
+        .json({ message: "The organization doesn't exist" });
     }
-}
+    const templates = org.templates;
+    console.log(`Templates fetched: ${templates}`);
+    const templates_mapped = templates.map((obj) => {
+      const { _id, name, publicBool } = obj;
+      return { _id, name, publicBool };
+    });
+    return res.status(200).json({ data: templates_mapped });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
 
 //See the public templates and his templates
 /*exports.SeeAllTemplates = async(req,res,next) => {
@@ -163,16 +206,17 @@ exports.uploadTemplate = async(req,res,next) => {
       }
 };
 
-
 exports.deleteTemplate = async (req, res, next) => {
-    try {
-      const templateID = req.params.templateID;
-      console.log(templateID)
-      const org = await Organization.findById(req.userData.org.id);
-      const templateIndex = org.templates.findIndex(template => template._id.toString() === templateID);
-      if (templateIndex === -1) {
-        return res.status(404).json({ message: "Template not found." });
-      }
+  try {
+    const templateID = req.params.templateID;
+    console.log(templateID);
+    const org = await Organization.findById(req.userData.org.id);
+    const templateIndex = org.templates.findIndex(
+      (template) => template._id.toString() === templateID
+    );
+    if (templateIndex === -1) {
+      return res.status(404).json({ message: "Template not found." });
+    }
       const filename = org.templates[templateIndex].name;
       org.templates.splice(templateIndex, 1);
       await org.save()
@@ -202,33 +246,36 @@ exports.getInfo = async(req,res,next) => {
     }
 }
 //Get all the headers of the csv
-exports.getAllTemplates = async(req,res,next) => {
-
-    try {
-        await Organization.findById(req.userData.org.id).then((org,err)=>{
-            if(org){
-                console.log(org)
-                console.log(org.templates)
-                return res.status(200).json([org.templates])
-            }
-            else{
-                return res.status(400).json({message : "Could not fetch the templates"})
-            }
-        })
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({message : error})
-    }
-} 
+exports.getAllTemplates = async (req, res, next) => {
+  try {
+    await Organization.findById(req.userData.org.id).then((org, err) => {
+      if (org) {
+        console.log(org);
+        console.log(org.templates);
+        return res.status(200).json([org.templates]);
+      } else {
+        return res
+          .status(400)
+          .json({ message: "Could not fetch the templates" });
+      }
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: error });
+  }
+};
 
 
 async function addDataToBlockChainWithExpiry(CertificateID,HashedValue,ExpiryTime){
     const res = await contractInstance.GenerateCertificate(CertificateID,HashedValue,ExpiryTime);
     return res
 }
-async function addDataToBlockChainWithoutExpiry(CertificateID,HashedValue){
-    const res = await contractInstance.GenerateCertificateWithInfinity(CertificateID,HashedValue);
-    return res
+async function addDataToBlockChainWithoutExpiry(CertificateID, HashedValue) {
+  const res = await contractInstance.GenerateCertificateWithInfinity(
+    CertificateID,
+    HashedValue
+  );
+  return res;
 }
 
 
@@ -305,6 +352,12 @@ async function mergeAndSendEmail(file_path, data_instance, template_name, email)
 }
 
 
+// let emailAccounts = [
+//   { user: "Cloud62024@outlook.com", pass: "Cloud@66" },
+//   { user: "aaryan22441@outlook.com", pass: "aaryan@22441" },
+//   { user: "Vinayak122333@outlook.com", pass: "vinayak@122333" },
+//   { user: "karishma1232024@outlook.com", pass: "karishma@1232024" },
+// ];
 
 let emailAccounts = [
     {user : "aaryan22441@outlook.com",pass : "aaryan@22441"},
@@ -312,16 +365,53 @@ let emailAccounts = [
     {user : "karishma1232024@outlook.com",pass : "karishma@1232024"}
 ]
 function distributeRowsAmongEmails(rows, emailAccounts) {
-    let rowsPerEmail = {};
-    rows.forEach((row, index) => {
-        const emailIndex = index % emailAccounts.length;
-        const email = emailAccounts[emailIndex];
-        if (!rowsPerEmail[email]) {
-            rowsPerEmail[JSON.stringify(email)] = [];
+  let rowsPerEmail = {};
+  rows.forEach((row, index) => {
+    const emailIndex = index % emailAccounts.length;
+    const email = emailAccounts[emailIndex];
+    if (!rowsPerEmail[email]) {
+      rowsPerEmail[JSON.stringify(email)] = [];
+    }
+    rowsPerEmail[JSON.stringify(email)].push(row);
+  });
+  return rowsPerEmail;
+}
+
+async function processRowsWithParallelEmails(
+  rows,
+  emailAccounts,
+  file_path,
+  template_name
+) {
+  try {
+    const rowsPerEmail = distributeRowsAmongEmails(rows, emailAccounts);
+    console.log("Rows per email:");
+    console.log(rowsPerEmail);
+    await Promise.all(
+      emailAccounts.map((email, index) => {
+        const emailRows = rowsPerEmail[JSON.stringify(email)] || [];
+        console.log("Email rows:");
+        console.log(emailRows);
+        // return processRowsForEmail(email, emailRows, file_path, template_name);
+        if (emailRows.length > 0) {
+          return processRowsForEmail(
+            email,
+            emailRows,
+            file_path,
+            template_name
+          );
+        } else {
+          console.log(
+            `Skipping processing for email ${email} as rows array is empty.`
+          );
         }
-        rowsPerEmail[JSON.stringify(email)].push(row);
-    });
-    return rowsPerEmail;
+      })
+    );
+
+    console.log("All rows processed successfully.");
+  } catch (err) {
+    console.error("Error processing rows:", err);
+  }
 }
 
 async function processRowsWithParallelEmails(rows, emailAccounts,file_path,template_name) {
@@ -347,7 +437,6 @@ async function processRowsForEmail(email, rows,file_path,template_name) {
         console.error(`Error processing rows for ${email}:`, err);
     }
 }
-
 
 exports.uploadCSVandSelectTemplate = async(req,res,next) => {
     const template = req.body.template_id;
